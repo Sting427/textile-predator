@@ -9,16 +9,18 @@ import pydeck as pdk
 import feedparser
 import requests
 import time
+from fpdf import FPDF
+import base64
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="ROTex // SECURE",
+    page_title="ROTex // ENTERPRISE",
     layout="wide",
     page_icon="💠",
     initial_sidebar_state="expanded"
 )
 
-# --- 🎨 THE "APEX" THEME (CSS INJECTION) ---
+# --- 🎨 THE "APEX" THEME (CSS) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700;800&display=swap');
@@ -44,38 +46,51 @@ st.markdown("""
         backdrop-filter: blur(15px);
     }
     
-    /* GLASSMORPHISM CARDS */
+    /* CARDS & CONTAINERS */
     div[data-testid="metric-container"] {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.08);
         padding: 15px;
         border-radius: 12px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
         border-left: 4px solid #00d2ff;
+        transition: transform 0.3s ease;
     }
-    div[data-testid="metric-container"]:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 210, 255, 0.15);
-    }
+    div[data-testid="metric-container"]:hover { transform: translateY(-5px); }
     
-    /* LOGO STYLES (Used in Sidebar & Login) */
-    .rotex-logo-container {
-        text-align: center;
-        margin-bottom: 20px;
+    .info-card {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
     }
-    .rotex-text {
-        font-family: 'Rajdhani', sans-serif;
-        font-weight: 800;
-        letter-spacing: 4px;
-        line-height: 1;
-        text-transform: uppercase;
+    .info-card:hover { border-color: #00d2ff; transform: translateX(5px); }
+    .info-card a { color: #00d2ff; text-decoration: none; font-weight: 700; font-family: 'Rajdhani', sans-serif; }
+    
+    /* JOB CARD SPECIAL STYLE */
+    .job-card {
+        background: rgba(0, 255, 136, 0.05);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(0, 255, 136, 0.1);
+        border-left: 4px solid #00ff88;
+        transition: all 0.3s ease;
     }
+    .job-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 255, 136, 0.1); }
+    .job-card h4 { margin: 0; color: #fff; font-size: 18px; }
+    .job-card a { color: #00ff88; text-decoration: none; font-weight: bold; }
+
+    /* LOGO & TYPOGRAPHY */
+    .rotex-logo-container { text-align: center; margin-bottom: 20px; }
+    .rotex-text { font-family: 'Rajdhani', sans-serif; font-weight: 800; letter-spacing: 4px; line-height: 1; text-transform: uppercase; }
     .ro-cyan { color: #00d2ff; text-shadow: 0 0 25px rgba(0, 210, 255, 0.6); }
     .tex-magenta { color: #ff0055; text-shadow: 0 0 25px rgba(255, 0, 85, 0.6); }
-    .rotex-tagline { font-size: 14px; color: #888; letter-spacing: 4px; margin-top: 8px; font-weight: 500; }
+    .rotex-tagline { font-size: 12px; color: #888; letter-spacing: 4px; margin-top: 8px; }
 
-    /* LOGIN PAGE SPECIFIC STYLES */
+    /* LOGIN BOX */
     .login-box {
         background: rgba(14, 17, 23, 0.8);
         border: 1px solid #333;
@@ -86,41 +101,10 @@ st.markdown("""
         border-top: 2px solid #00d2ff;
         border-bottom: 2px solid #ff0055;
     }
-    
-    /* BUTTONS */
-    .stButton>button {
-        background: linear-gradient(90deg, #00d2ff, #3a7bd5);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-weight: bold;
-        font-family: 'Rajdhani', sans-serif;
-        letter-spacing: 2px;
-        transition: all 0.3s;
-        text-transform: uppercase;
-    }
-    .stButton>button:hover {
-        box-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
-        transform: scale(1.02);
-    }
-    
-    /* INPUT FIELDS */
-    .stTextInput>div>div>input {
-        background-color: rgba(255, 255, 255, 0.05);
-        color: white;
-        border: 1px solid #444;
-        font-family: 'Rajdhani', sans-serif;
-        letter-spacing: 2px;
-        text-align: center;
-    }
-    .stTextInput>div>div>input:focus {
-        border-color: #00d2ff;
-        box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
-    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🔒 PREMIUM SECURITY SYSTEM ---
+# --- 🔒 SECURITY SYSTEM ---
 def check_password():
     def password_entered():
         if st.session_state["password"] == "TEXTILE_KING":
@@ -130,14 +114,9 @@ def check_password():
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        # --- LOGIN SCREEN LAYOUT ---
-        # We use empty columns to center the login box
         col1, col2, col3 = st.columns([1, 1.5, 1])
-        
         with col2:
-            st.markdown("<br><br><br>", unsafe_allow_html=True) # Spacer
-            
-            # THE LOGO & LOGIN BOX
+            st.markdown("<br><br><br>", unsafe_allow_html=True)
             st.markdown("""
             <div class="login-box">
                 <div class="rotex-logo-container">
@@ -147,25 +126,10 @@ def check_password():
                 </div>
             </div>
             """, unsafe_allow_html=True)
-            
-            # The Input Field (Streamlit widgets can't be inside HTML div, so we place it right below)
             st.text_input("AUTHENTICATION KEY", type="password", on_change=password_entered, key="password")
-            
-            st.markdown("<div style='text-align:center; color:#444; margin-top:10px; font-size:12px;'>ENCRYPTED CONNECTION ESTABLISHED</div>", unsafe_allow_html=True)
-            
         return False
     elif not st.session_state["password_correct"]:
-        # Wrong Password View
-        col1, col2, col3 = st.columns([1, 1.5, 1])
-        with col2:
-             st.markdown("<br><br><br>", unsafe_allow_html=True)
-             st.markdown("""
-                <div class="login-box" style="border-color: red;">
-                    <h2 style="color:red; text-shadow: 0 0 10px red;">⛔ ACCESS DENIED</h2>
-                    <p>INVALID CREDENTIALS</p>
-                </div>
-             """, unsafe_allow_html=True)
-             st.text_input("AUTHENTICATION KEY", type="password", on_change=password_entered, key="password")
+        st.error("⛔ ACCESS DENIED")
         return False
     else:
         return True
@@ -209,6 +173,18 @@ def get_news_stealth():
         return feed.entries[:4]
     except: return []
 
+# --- 💼 JOB FINDER MODULE ---
+def get_jobs_stealth():
+    # Searching for specific textile recruitment keywords
+    headers = { "User-Agent": "Mozilla/5.0" }
+    # Search query tailored for job circulars
+    url = "https://news.google.com/rss/search?q=Textile+Job+Vacancy+Bangladesh+OR+Textile+Recruitment+Notice+OR+Garment+Factory+Job+Circular+when:7d&hl=en-BD&gl=BD&ceid=BD:en"
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        feed = feedparser.parse(response.content)
+        return feed.entries[:8] # Get top 8 jobs
+    except: return []
+
 def process_fabric_image(image_file):
     file_bytes = np.asarray(bytearray(image_file.read()), dtype=np.uint8)
     img = cv2.imdecode(file_bytes, 1)
@@ -246,6 +222,40 @@ def get_research_papers(topic):
         else: return []
     except: return []
 
+# --- 📄 PDF REPORT GENERATOR ---
+def create_pdf_report(yarn_val, cotton_val, gas_val, news_list):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 24)
+    pdf.cell(0, 20, "ROTex INTELLIGENCE REPORT", ln=True, align="C")
+    
+    pdf.set_font("Arial", "I", 12)
+    pdf.cell(0, 10, f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}", ln=True, align="C")
+    pdf.ln(10)
+    
+    # Market Section
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "1. MARKET SNAPSHOT", ln=True)
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(0, 10, f"Yarn Fair Value: ${yarn_val:.2f} / kg", ln=True)
+    pdf.cell(0, 10, f"Cotton (NYMEX): ${cotton_val:.2f}", ln=True)
+    pdf.cell(0, 10, f"Gas (Henry Hub): ${gas_val:.2f}", ln=True)
+    pdf.ln(10)
+    
+    # Threat Section
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "2. KEY THREATS / NEWS", ln=True)
+    pdf.set_font("Arial", "", 10)
+    if news_list:
+        for item in news_list:
+            # Clean title of non-ascii chars for PDF safety
+            clean_title = item.title.encode('latin-1', 'ignore').decode('latin-1')
+            pdf.multi_cell(0, 8, f"- {clean_title}")
+    else:
+        pdf.cell(0, 10, "No critical threats detected.", ln=True)
+        
+    return pdf.output(dest='S').encode('latin-1')
+
 # --- 🚀 LAUNCH SEQUENCE ---
 if check_password():
     
@@ -259,7 +269,7 @@ if check_password():
         """, unsafe_allow_html=True)
         
         st.divider()
-        menu = st.radio("SYSTEM MODULES", ["WAR ROOM", "VISION AI", "LOGISTICS", "DEAL BREAKER", "R&D LAB"])
+        menu = st.radio("SYSTEM MODULES", ["WAR ROOM", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "R&D LAB"])
         st.divider()
         if st.button("TERMINATE SESSION"):
             st.session_state["password_correct"] = False
@@ -274,7 +284,19 @@ if check_password():
 
     # --- 1. WAR ROOM ---
     if menu == "WAR ROOM":
-        st.markdown("## 📡 MARKET INTELLIGENCE")
+        # Header + Report Button
+        c_head, c_btn = st.columns([3, 1])
+        with c_head: st.markdown("## 📡 MARKET INTELLIGENCE")
+        with c_btn:
+            # Generate PDF Data
+            pdf_bytes = create_pdf_report(current_yarn_cost, df['Cotton_USD'].iloc[-1], df['Gas_USD'].iloc[-1], news_items)
+            st.download_button(
+                label="📄 DOWNLOAD REPORT",
+                data=pdf_bytes,
+                file_name=f"ROTex_Report_{time.strftime('%Y%m%d')}.pdf",
+                mime="application/pdf"
+            )
+
         c1, c2, c3 = st.columns(3)
         curr = df['Yarn_Fair_Value'].iloc[-1]
         nxt = preds[-1]
@@ -298,18 +320,33 @@ if check_password():
         if news_items:
             n1, n2 = st.columns(2)
             for i, item in enumerate(news_items):
-                card_html = f"""
-                <div class="info-card">
-                    <a href="{item.link}" target="_blank">➤ {item.title}</a><br>
-                    <span style="color: #888; font-size: 12px; font-family: sans-serif;">{item.published[:16]}</span>
-                </div>
-                """
+                card_html = f"""<div class="info-card"><a href="{item.link}" target="_blank">➤ {item.title}</a><br><span style="color: #888; font-size: 12px;">{item.published[:16]}</span></div>"""
                 if i % 2 == 0: n1.markdown(card_html, unsafe_allow_html=True)
                 else: n2.markdown(card_html, unsafe_allow_html=True)
         else:
             st.warning("NO INTEL AVAILABLE")
 
-    # --- 2. VISION AI ---
+    # --- 2. RECRUITMENT ---
+    elif menu == "RECRUITMENT":
+        st.markdown("## 🤝 INDUSTRY RECRUITMENT FEED")
+        st.markdown("Live scan of Vacancy Notices from Factories, Mills, and MNCs.")
+        
+        with st.spinner("SCANNING JOB BOARDS..."):
+            jobs = get_jobs_stealth()
+            
+        if jobs:
+            for job in jobs:
+                st.markdown(f"""
+                <div class="job-card">
+                    <h4>{job.title}</h4>
+                    <p style="color: #ccc; font-size: 14px; margin-bottom: 5px;">Published: {job.published[:16]}</p>
+                    <a href="{job.link}" target="_blank">📄 VIEW CIRCULAR / APPLY NOW</a>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("No active circulars found in the last 7 days. Check back later.")
+
+    # --- 3. VISION AI ---
     elif menu == "VISION AI":
         st.markdown("## 👁️ DEFECT SCANNER")
         uploaded_file = st.file_uploader("UPLOAD FABRIC IMAGE", type=['jpg', 'png', 'jpeg'])
@@ -322,12 +359,12 @@ if check_password():
                 if count > 0: st.error(f"❌ REJECT LOT ({count} DEFECTS)")
                 else: st.success("✅ APPROVED")
 
-    # --- 3. LOGISTICS ---
+    # --- 4. LOGISTICS ---
     elif menu == "LOGISTICS":
         st.markdown("## 🌍 SUPPLY CHAIN (LIVE)")
         st.pydeck_chart(render_3d_map())
 
-    # --- 4. DEAL BREAKER ---
+    # --- 5. DEAL BREAKER ---
     elif menu == "DEAL BREAKER":
         st.markdown("## 💰 PROFIT CALCULATOR")
         c1, c2 = st.columns(2)
@@ -348,7 +385,7 @@ if check_password():
             else:
                 st.error(f"❌ LOSS: ${margin:.2f}/kg | TOTAL: ${margin*qty:,.2f}")
 
-    # --- 5. R&D LAB ---
+    # --- 6. R&D LAB ---
     elif menu == "R&D LAB":
         st.markdown("## 🔬 RESEARCH ARCHIVE")
         topic = st.selectbox("SELECT TOPIC", ["Sustainable Dyeing", "Smart Fabrics", "Recycled Polyester", "Nano-Finishing"])
