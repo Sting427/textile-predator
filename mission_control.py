@@ -10,22 +10,23 @@ import feedparser
 import requests
 import time
 from fpdf import FPDF
-import base64
+import matplotlib.pyplot as plt
+import os
+import random
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="ROTex // ENTERPRISE",
+    page_title="ROTex // CONNECTED",
     layout="wide",
     page_icon="💠",
     initial_sidebar_state="expanded"
 )
 
-# --- 🎨 THE "APEX" THEME (CSS) ---
+# --- 🎨 THE "APEX" THEME ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700;800&display=swap');
 
-    /* ANIMATED BACKGROUND */
     .stApp {
         background: linear-gradient(-45deg, #000000, #0a0a0a, #1a0b2e, #000000);
         background-size: 400% 400%;
@@ -39,14 +40,12 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
 
-    /* SIDEBAR STYLING */
     section[data-testid="stSidebar"] {
         background-color: rgba(0, 0, 0, 0.85);
         border-right: 1px solid #333;
         backdrop-filter: blur(15px);
     }
     
-    /* CARDS & CONTAINERS */
     div[data-testid="metric-container"] {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(12px);
@@ -69,7 +68,6 @@ st.markdown("""
     .info-card:hover { border-color: #00d2ff; transform: translateX(5px); }
     .info-card a { color: #00d2ff; text-decoration: none; font-weight: 700; font-family: 'Rajdhani', sans-serif; }
     
-    /* JOB CARD SPECIAL STYLE */
     .job-card {
         background: rgba(0, 255, 136, 0.05);
         padding: 15px;
@@ -83,14 +81,12 @@ st.markdown("""
     .job-card h4 { margin: 0; color: #fff; font-size: 18px; }
     .job-card a { color: #00ff88; text-decoration: none; font-weight: bold; }
 
-    /* LOGO & TYPOGRAPHY */
     .rotex-logo-container { text-align: center; margin-bottom: 20px; }
     .rotex-text { font-family: 'Rajdhani', sans-serif; font-weight: 800; letter-spacing: 4px; line-height: 1; text-transform: uppercase; }
     .ro-cyan { color: #00d2ff; text-shadow: 0 0 25px rgba(0, 210, 255, 0.6); }
     .tex-magenta { color: #ff0055; text-shadow: 0 0 25px rgba(255, 0, 85, 0.6); }
     .rotex-tagline { font-size: 12px; color: #888; letter-spacing: 4px; margin-top: 8px; }
 
-    /* LOGIN BOX */
     .login-box {
         background: rgba(14, 17, 23, 0.8);
         border: 1px solid #333;
@@ -100,6 +96,24 @@ st.markdown("""
         text-align: center;
         border-top: 2px solid #00d2ff;
         border-bottom: 2px solid #ff0055;
+    }
+
+    /* IOT ALERTS */
+    .iot-alert {
+        background-color: rgba(255, 0, 85, 0.1);
+        border: 1px solid #ff0055;
+        color: #ff0055;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 10px;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(255, 0, 85, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -175,15 +189,23 @@ def get_news_stealth():
 
 # --- 💼 JOB FINDER MODULE ---
 def get_jobs_stealth():
-    # Searching for specific textile recruitment keywords
     headers = { "User-Agent": "Mozilla/5.0" }
-    # Search query tailored for job circulars
     url = "https://news.google.com/rss/search?q=Textile+Job+Vacancy+Bangladesh+OR+Textile+Recruitment+Notice+OR+Garment+Factory+Job+Circular+when:7d&hl=en-BD&gl=BD&ceid=BD:en"
     try:
         response = requests.get(url, headers=headers, timeout=5)
         feed = feedparser.parse(response.content)
-        return feed.entries[:8] # Get top 8 jobs
+        return feed.entries[:8]
     except: return []
+
+# --- 📡 IOT SIMULATION ENGINE ---
+def get_iot_data():
+    # Simulates live sensor readings
+    return {
+        "loom_speed": random.randint(780, 820), # RPM
+        "humidity": random.randint(60, 75),     # %
+        "temperature": random.uniform(28.0, 35.0), # Celsius
+        "power": random.uniform(120.0, 125.0)   # kW
+    }
 
 def process_fabric_image(image_file):
     file_bytes = np.asarray(bytearray(image_file.read()), dtype=np.uint8)
@@ -223,43 +245,46 @@ def get_research_papers(topic):
     except: return []
 
 # --- 📄 PDF REPORT GENERATOR ---
-def create_pdf_report(yarn_val, cotton_val, gas_val, news_list):
+def create_pdf_report(yarn_val, cotton_val, gas_val, news_list, df_history):
+    plt.figure(figsize=(10, 4))
+    plt.plot(df_history.index, df_history['Yarn_Fair_Value'], color='#00d2ff', linewidth=2)
+    plt.title('Yarn Price Trend (Past Year)', fontsize=14)
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.savefig('temp_chart.png', dpi=100)
+    plt.close()
+
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", "B", 24)
     pdf.cell(0, 20, "ROTex INTELLIGENCE REPORT", ln=True, align="C")
-    
     pdf.set_font("Arial", "I", 12)
     pdf.cell(0, 10, f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}", ln=True, align="C")
-    pdf.ln(10)
-    
-    # Market Section
+    pdf.ln(5)
     pdf.set_font("Arial", "B", 16)
     pdf.cell(0, 10, "1. MARKET SNAPSHOT", ln=True)
     pdf.set_font("Arial", "", 12)
-    pdf.cell(0, 10, f"Yarn Fair Value: ${yarn_val:.2f} / kg", ln=True)
-    pdf.cell(0, 10, f"Cotton (NYMEX): ${cotton_val:.2f}", ln=True)
-    pdf.cell(0, 10, f"Gas (Henry Hub): ${gas_val:.2f}", ln=True)
-    pdf.ln(10)
-    
-    # Threat Section
+    pdf.cell(0, 8, f"Yarn Fair Value: ${yarn_val:.2f} / kg", ln=True)
+    pdf.cell(0, 8, f"Cotton (NYMEX): ${cotton_val:.2f}", ln=True)
+    pdf.cell(0, 8, f"Gas (Henry Hub): ${gas_val:.2f}", ln=True)
+    pdf.ln(5)
+    pdf.image('temp_chart.png', x=10, w=190)
+    pdf.ln(5)
     pdf.set_font("Arial", "B", 16)
     pdf.cell(0, 10, "2. KEY THREATS / NEWS", ln=True)
     pdf.set_font("Arial", "", 10)
     if news_list:
         for item in news_list:
-            # Clean title of non-ascii chars for PDF safety
             clean_title = item.title.encode('latin-1', 'ignore').decode('latin-1')
-            pdf.multi_cell(0, 8, f"- {clean_title}")
+            pdf.multi_cell(0, 6, f"- {clean_title}")
+            pdf.ln(2)
     else:
         pdf.cell(0, 10, "No critical threats detected.", ln=True)
-        
+    if os.path.exists("temp_chart.png"): os.remove("temp_chart.png")
     return pdf.output(dest='S').encode('latin-1')
 
 # --- 🚀 LAUNCH SEQUENCE ---
 if check_password():
     
-    # --- SIDEBAR NAV ---
     with st.sidebar:
         st.markdown("""
         <div class="rotex-logo-container">
@@ -267,41 +292,30 @@ if check_password():
             <div class="rotex-tagline">SYSTEMS ONLINE</div>
         </div>
         """, unsafe_allow_html=True)
-        
         st.divider()
-        menu = st.radio("SYSTEM MODULES", ["WAR ROOM", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "R&D LAB"])
+        menu = st.radio("SYSTEM MODULES", ["WAR ROOM", "FACTORY IoT", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "R&D LAB"])
         st.divider()
         if st.button("TERMINATE SESSION"):
             st.session_state["password_correct"] = False
             st.rerun()
 
-    # --- LOAD DATA ---
     with st.spinner("ESTABLISHING SECURE UPLINK..."):
         df = load_market_data()
         preds = run_prediction(df)
         current_yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
         news_items = get_news_stealth()
 
-    # --- 1. WAR ROOM ---
     if menu == "WAR ROOM":
-        # Header + Report Button
         c_head, c_btn = st.columns([3, 1])
         with c_head: st.markdown("## 📡 MARKET INTELLIGENCE")
         with c_btn:
-            # Generate PDF Data
-            pdf_bytes = create_pdf_report(current_yarn_cost, df['Cotton_USD'].iloc[-1], df['Gas_USD'].iloc[-1], news_items)
-            st.download_button(
-                label="📄 DOWNLOAD REPORT",
-                data=pdf_bytes,
-                file_name=f"ROTex_Report_{time.strftime('%Y%m%d')}.pdf",
-                mime="application/pdf"
-            )
+            pdf_bytes = create_pdf_report(current_yarn_cost, df['Cotton_USD'].iloc[-1], df['Gas_USD'].iloc[-1], news_items, df)
+            st.download_button("📄 DOWNLOAD REPORT", pdf_bytes, f"ROTex_Report_{time.strftime('%Y%m%d')}.pdf", "application/pdf")
 
         c1, c2, c3 = st.columns(3)
         curr = df['Yarn_Fair_Value'].iloc[-1]
         nxt = preds[-1]
         delta = ((nxt - curr)/curr)*100
-        
         with c1: st.metric("YARN FAIR VALUE", f"${curr:.2f}", f"{delta:.2f}%")
         with c2: st.metric("COTTON (NYMEX)", f"${df['Cotton_USD'].iloc[-1]:.2f}", "LIVE")
         with c3: st.metric("GAS (HENRY HUB)", f"${df['Gas_USD'].iloc[-1]:.2f}", "LIVE")
@@ -325,28 +339,49 @@ if check_password():
                 else: n2.markdown(card_html, unsafe_allow_html=True)
         else:
             st.warning("NO INTEL AVAILABLE")
+            
+    # --- FACTORY IOT MODULE (NEW) ---
+    elif menu == "FACTORY IoT":
+        st.markdown("## 🏭 DIGITAL TWIN // LIVE SENSORS")
+        
+        # Get Simulated Data
+        iot = get_iot_data()
+        
+        # ALERTS
+        if iot['temperature'] > 34.0:
+            st.markdown(f'<div class="iot-alert">⚠️ HIGH TEMP ALERT: MACHINE #4 ({iot["temperature"]:.1f}°C)</div>', unsafe_allow_html=True)
+        
+        # Live Metric Cards
+        k1, k2, k3, k4 = st.columns(4)
+        k1.metric("LOOM #1 SPEED", f"{iot['loom_speed']} RPM", "+2")
+        k2.metric("FLOOR HUMIDITY", f"{iot['humidity']}%", "-1%")
+        k3.metric("TEMP (ZONE A)", f"{iot['temperature']:.1f}°C", "STABLE")
+        k4.metric("POWER LOAD", f"{iot['power']:.1f} kW", "NORMAL")
+        
+        st.divider()
+        
+        # Simulated Real-time Chart
+        st.markdown("### ⚡ REAL-TIME POWER CONSUMPTION")
+        # Creating a fake history for the chart
+        chart_data = pd.DataFrame(
+            np.random.randn(20, 3) + [iot['power'], iot['temperature'], iot['humidity']],
+            columns=['Power (kW)', 'Temp (C)', 'Humidity (%)']
+        )
+        st.line_chart(chart_data)
+        
+        st.caption("Auto-refresh enabled. Data updates on interaction.")
 
-    # --- 2. RECRUITMENT ---
     elif menu == "RECRUITMENT":
         st.markdown("## 🤝 INDUSTRY RECRUITMENT FEED")
-        st.markdown("Live scan of Vacancy Notices from Factories, Mills, and MNCs.")
-        
+        st.info("SOURCE: LIVE NEWS AGGREGATION (GOOGLE NEWS). Real-time scan of public circulars.")
         with st.spinner("SCANNING JOB BOARDS..."):
             jobs = get_jobs_stealth()
-            
         if jobs:
             for job in jobs:
-                st.markdown(f"""
-                <div class="job-card">
-                    <h4>{job.title}</h4>
-                    <p style="color: #ccc; font-size: 14px; margin-bottom: 5px;">Published: {job.published[:16]}</p>
-                    <a href="{job.link}" target="_blank">📄 VIEW CIRCULAR / APPLY NOW</a>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"""<div class="job-card"><h4>{job.title}</h4><p style="color: #ccc; font-size: 14px; margin-bottom: 5px;">Published: {job.published[:16]}</p><a href="{job.link}" target="_blank">📄 VIEW CIRCULAR / APPLY NOW</a></div>""", unsafe_allow_html=True)
         else:
             st.info("No active circulars found in the last 7 days. Check back later.")
 
-    # --- 3. VISION AI ---
     elif menu == "VISION AI":
         st.markdown("## 👁️ DEFECT SCANNER")
         uploaded_file = st.file_uploader("UPLOAD FABRIC IMAGE", type=['jpg', 'png', 'jpeg'])
@@ -359,12 +394,10 @@ if check_password():
                 if count > 0: st.error(f"❌ REJECT LOT ({count} DEFECTS)")
                 else: st.success("✅ APPROVED")
 
-    # --- 4. LOGISTICS ---
     elif menu == "LOGISTICS":
         st.markdown("## 🌍 SUPPLY CHAIN (LIVE)")
         st.pydeck_chart(render_3d_map())
 
-    # --- 5. DEAL BREAKER ---
     elif menu == "DEAL BREAKER":
         st.markdown("## 💰 PROFIT CALCULATOR")
         c1, c2 = st.columns(2)
@@ -385,7 +418,6 @@ if check_password():
             else:
                 st.error(f"❌ LOSS: ${margin:.2f}/kg | TOTAL: ${margin*qty:,.2f}")
 
-    # --- 6. R&D LAB ---
     elif menu == "R&D LAB":
         st.markdown("## 🔬 RESEARCH ARCHIVE")
         topic = st.selectbox("SELECT TOPIC", ["Sustainable Dyeing", "Smart Fabrics", "Recycled Polyester", "Nano-Finishing"])
@@ -393,9 +425,4 @@ if check_password():
             with st.spinner("SEARCHING DATABASE..."):
                 papers = get_research_papers(topic)
                 for p in papers:
-                    st.markdown(f"""
-                    <div class="info-card">
-                        <a href="{p.get('url')}" target="_blank">📄 {p.get('title')}</a><br>
-                        <span style="color:#888;">{p.get('year')}</span>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown(f"""<div class="info-card"><a href="{p.get('url')}" target="_blank">📄 {p.get('title')}</a><br><span style="color:#888;">{p.get('year')}</span></div>""", unsafe_allow_html=True)
