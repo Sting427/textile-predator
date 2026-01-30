@@ -7,6 +7,7 @@ from sklearn.linear_model import LinearRegression
 import plotly.graph_objects as go
 import pydeck as pdk
 import feedparser
+import requests # Needed for the disguise
 import time
 
 # --- 💀 PAGE CONFIGURATION ---
@@ -18,7 +19,7 @@ st.markdown("""
     .big-font { font-size:24px !important; font-weight: bold; }
     .profit-pos { color: #00FF00; font-size: 30px; font-weight: bold; }
     .profit-neg { color: #FF0000; font-size: 30px; font-weight: bold; }
-    /* Make the Tabs look professional */
+    .news-card { background-color: #1E1E1E; padding: 10px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #FF4B4B; }
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     .stTabs [data-baseweb="tab"] { height: 50px; white-space: pre-wrap; background-color: #0E1117; border-radius: 4px 4px 0px 0px; gap: 1px; padding-top: 10px; padding-bottom: 10px; }
     .stTabs [aria-selected="true"] { background-color: #262730; border-bottom: 2px solid #FF4B4B; }
@@ -56,6 +57,21 @@ def run_prediction(df):
     future_df = pd.DataFrame({'Cotton_USD': future_cotton, 'Gas_USD': future_gas})
     return model.predict(future_df)
 
+# --- 📰 MODULE 4: THE SNIPER (Now with Stealth Mode) ---
+def get_news_stealth():
+    # We pretend to be a Chrome Browser so Google doesn't block us
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    url = "https://news.google.com/rss/search?q=Bangladesh+Textile+Industry+when:3d&hl=en-BD&gl=BD&ceid=BD:en"
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        feed = feedparser.parse(response.content)
+        return feed.entries[:5] # Return top 5 stories
+    except:
+        return []
+
 # --- 👁️ MODULE 2: FABRIC EYE ---
 def process_fabric_image(image_file):
     file_bytes = np.asarray(bytearray(image_file.read()), dtype=np.uint8)
@@ -73,9 +89,9 @@ def process_fabric_image(image_file):
             count += 1
     return output_img, count
 
-# --- 🌍 MODULE 3: THE 3D GLOBE (IT LIVES!) ---
+# --- 🌍 MODULE 3: THE 3D GLOBE ---
 def render_3d_map():
-    target = [91.8, 22.3] # Chittagong
+    target = [91.8, 22.3] 
     sources = [
         {"name": "Texas, USA", "coords": [-99.9, 31.9], "color": [0, 255, 0]},
         {"name": "Sao Paulo, BR", "coords": [-46.6, -23.5], "color": [0, 128, 255]},
@@ -84,37 +100,19 @@ def render_3d_map():
     ]
     arc_data = [{"source": s["coords"], "target": target, "name": s["name"], "color": s["color"]} for s in sources]
     
-    layer = pdk.Layer(
-        "ArcLayer",
-        data=arc_data,
-        get_source_position="source",
-        get_target_position="target",
-        get_width=5,
-        get_tilt=15,
-        get_source_color="color",
-        get_target_color="color",
-        pickable=True,
-        auto_highlight=True,
-    )
+    layer = pdk.Layer("ArcLayer", data=arc_data, get_source_position="source", get_target_position="target", get_width=5, get_tilt=15, get_source_color="color", get_target_color="color", pickable=True, auto_highlight=True)
     view_state = pdk.ViewState(latitude=20, longitude=60, zoom=1, pitch=45)
-    
-    return pdk.Deck(
-        layers=[layer], 
-        initial_view_state=view_state, 
-        map_style="mapbox://styles/mapbox/dark-v10",
-        tooltip={"text": "{name}"}
-    )
+    return pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/dark-v10", tooltip={"text": "{name}"})
 
 # --- 🖥️ DASHBOARD UI ---
-st.title("💀 TEXTILE PREDATOR // COMMAND v4.0")
+st.title("💀 TEXTILE PREDATOR // COMMAND v5.0")
 
-# Load Data Once for All Tabs
 with st.spinner("Syncing with Global Markets..."):
     df = load_market_data()
     preds = run_prediction(df)
     current_yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
+    news_items = get_news_stealth() # Fetch news with stealth mode
 
-# DEFINING THE 4 TABS
 tab1, tab2, tab3, tab4 = st.tabs(["📈 WAR ROOM", "👁️ FABRIC EYE", "🌍 GLOBAL LOGISTICS", "💰 DEAL BREAKER"])
 
 with tab1:
@@ -135,6 +133,23 @@ with tab1:
     fig.add_trace(go.Scatter(x=future_dates, y=preds, name='AI FORECAST', line=dict(color='#e74c3c', width=4, dash='dot')))
     fig.update_layout(height=350, template="plotly_dark", margin=dict(l=0,r=0,t=30,b=0))
     st.plotly_chart(fig, use_container_width=True)
+    
+    st.divider()
+    st.markdown("##### 🚨 LIVE THREATS (Click to Read)")
+    
+    if news_items:
+        for item in news_items:
+            # Create a clickable card for each news item
+            st.markdown(f"""
+            <div class="news-card">
+                <a href="{item.link}" target="_blank" style="text-decoration: none; color: white;">
+                    <b>{item.title}</b><br>
+                    <span style="font-size: 12px; color: #888;">{item.published[:16]}</span>
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.warning("⚠️ Intel Feed Blocked or Empty. [Click here to Manual Search](https://news.google.com/search?q=Bangladesh+Textile)")
 
 with tab2:
     st.markdown("### 👁️ DEFECT SCANNER")
@@ -149,52 +164,25 @@ with tab2:
 
 with tab3:
     st.markdown("### 🌍 GLOBAL SUPPLY CHAIN")
-    st.write("Visualizing Live Cotton Shipments to Chittagong Port.")
     st.pydeck_chart(render_3d_map())
-    st.caption("🟢 USA | 🔵 Brazil | 🟠 India | 🟣 Australia")
 
 with tab4:
-    st.markdown("### 💰 THE DEAL BREAKER (Margin Calculator)")
-    st.info("Input your Buyer's Offer. The AI will calculate profitability based on TODAY'S Market Price.")
-    
+    st.markdown("### 💰 THE DEAL BREAKER")
     colA, colB = st.columns(2)
-    
     with colA:
-        st.markdown("#### 📝 ORDER DETAILS")
-        buyer_price = st.number_input("Buyer Offer Price ($ per kg)", value=4.50, step=0.05)
-        order_qty = st.number_input("Order Quantity (kg)", value=10000)
-        
-        st.markdown("#### 🏭 FACTORY OVERHEADS")
-        knitting_cost = st.number_input("Knitting/Dyeing Cost ($ per kg)", value=0.60)
-        overhead_cost = st.number_input("Admin/Transport ($ per kg)", value=0.15)
-        
+        buyer_price = st.number_input("Buyer Offer ($/kg)", value=4.50, step=0.05)
+        order_qty = st.number_input("Qty (kg)", value=10000)
+        knitting_cost = st.number_input("Knitting ($/kg)", value=0.60)
+        overhead_cost = st.number_input("Overhead ($/kg)", value=0.15)
     with colB:
-        st.markdown("#### 🤖 AI ANALYSIS")
-        
-        # Calculations
-        raw_material_cost = current_yarn_cost # Pulled from Live Market
+        raw_material_cost = current_yarn_cost
         total_cost = raw_material_cost + knitting_cost + overhead_cost
         margin = buyer_price - total_cost
-        total_profit = margin * order_qty
-        margin_percent = (margin / buyer_price) * 100
-        
-        # Display
-        st.write(f"📉 **Live Yarn Cost:** ${raw_material_cost:.2f} / kg")
-        st.write(f"⚙️ **Total Production Cost:** ${total_cost:.2f} / kg")
-        st.divider()
-        
         if margin > 0:
-            st.markdown(f'<p class="profit-pos">✅ ACCEPT DEAL</p>', unsafe_allow_html=True)
-            st.write(f"**Net Profit:** ${margin:.2f} / kg")
-            st.write(f"**Total Profit:** ${total_profit:,.2f}")
-            st.write(f"**Margin:** {margin_percent:.1f}%")
-            if st.button("Celebrate Win"):
-                st.balloons()
+            st.markdown(f'<p class="profit-pos">✅ PROFIT: ${margin:.2f}/kg</p>', unsafe_allow_html=True)
+            st.balloons()
         else:
-            st.markdown(f'<p class="profit-neg">❌ REJECT DEAL</p>', unsafe_allow_html=True)
-            st.write(f"**Net LOSS:** ${margin:.2f} / kg")
-            st.write(f"**Total LOSS:** ${total_profit:,.2f}")
-            st.error(f"⚠️ You need to negotiate at least ${total_cost + 0.20:.2f} to break even safely.")
+            st.markdown(f'<p class="profit-neg">❌ LOSS: ${margin:.2f}/kg</p>', unsafe_allow_html=True)
 
 # --- 🔄 AUTO-REFRESH ---
 st.divider()
