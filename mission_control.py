@@ -9,7 +9,6 @@ import pydeck as pdk
 import feedparser
 import requests
 import time
-from streamlit_option_menu import option_menu # You might need to add this to requirements.txt if you want a fancy menu, but for now I'll use native to keep it simple.
 
 # --- 🏢 PAGE CONFIGURATION ---
 st.set_page_config(
