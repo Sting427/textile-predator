@@ -9,11 +9,10 @@ import pydeck as pdk
 import feedparser
 import requests
 import time
-from streamlit_lottie import st_lottie
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="TEX-OS // APEX",
+    page_title="ROTex // SECURE",
     layout="wide",
     page_icon="💠",
     initial_sidebar_state="expanded"
@@ -22,7 +21,7 @@ st.set_page_config(
 # --- 🎨 THE "APEX" THEME (CSS INJECTION) ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700;800&display=swap');
 
     /* ANIMATED BACKGROUND */
     .stApp {
@@ -40,16 +39,16 @@ st.markdown("""
 
     /* SIDEBAR STYLING */
     section[data-testid="stSidebar"] {
-        background-color: rgba(0, 0, 0, 0.8);
+        background-color: rgba(0, 0, 0, 0.85);
         border-right: 1px solid #333;
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(15px);
     }
     
     /* GLASSMORPHISM CARDS */
     div[data-testid="metric-container"] {
         background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         padding: 15px;
         border-radius: 12px;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -57,38 +56,35 @@ st.markdown("""
     }
     div[data-testid="metric-container"]:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 210, 255, 0.2);
+        box-shadow: 0 10px 20px rgba(0, 210, 255, 0.15);
     }
     
-    /* NEWS & INFO CARDS WITH HOVER GLOW */
-    .info-card {
-        background: rgba(255, 255, 255, 0.03);
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        transition: all 0.3s ease;
+    /* LOGO STYLES (Used in Sidebar & Login) */
+    .rotex-logo-container {
+        text-align: center;
+        margin-bottom: 20px;
     }
-    .info-card:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: #00d2ff;
-        transform: translateX(5px);
-    }
-    .info-card a {
-        color: #00d2ff;
-        text-decoration: none;
-        font-size: 18px;
-        font-weight: 700;
+    .rotex-text {
         font-family: 'Rajdhani', sans-serif;
-    }
-    
-    /* TYPOGRAPHY */
-    h1, h2, h3 {
-        color: #ffffff !important;
-        font-family: 'Rajdhani', sans-serif;
+        font-weight: 800;
+        letter-spacing: 4px;
+        line-height: 1;
         text-transform: uppercase;
-        letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+    }
+    .ro-cyan { color: #00d2ff; text-shadow: 0 0 25px rgba(0, 210, 255, 0.6); }
+    .tex-magenta { color: #ff0055; text-shadow: 0 0 25px rgba(255, 0, 85, 0.6); }
+    .rotex-tagline { font-size: 14px; color: #888; letter-spacing: 4px; margin-top: 8px; font-weight: 500; }
+
+    /* LOGIN PAGE SPECIFIC STYLES */
+    .login-box {
+        background: rgba(14, 17, 23, 0.8);
+        border: 1px solid #333;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        text-align: center;
+        border-top: 2px solid #00d2ff;
+        border-bottom: 2px solid #ff0055;
     }
     
     /* BUTTONS */
@@ -99,26 +95,32 @@ st.markdown("""
         border-radius: 6px;
         font-weight: bold;
         font-family: 'Rajdhani', sans-serif;
-        letter-spacing: 1px;
+        letter-spacing: 2px;
         transition: all 0.3s;
+        text-transform: uppercase;
     }
     .stButton>button:hover {
-        box-shadow: 0 0 15px rgba(0, 210, 255, 0.6);
+        box-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
         transform: scale(1.02);
+    }
+    
+    /* INPUT FIELDS */
+    .stTextInput>div>div>input {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: white;
+        border: 1px solid #444;
+        font-family: 'Rajdhani', sans-serif;
+        letter-spacing: 2px;
+        text-align: center;
+    }
+    .stTextInput>div>div>input:focus {
+        border-color: #00d2ff;
+        box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🎞️ ANIMATION LOADER ---
-def load_lottieurl(url: str):
-    r = requests.get(url)
-    if r.status_code != 200: return None
-    return r.json()
-
-# Load Assets
-lottie_tech = load_lottieurl("https://lottie.host/5a67c57c-d698-4228-a37f-534d0b277d33/9qZ2F5W3rT.json") # Tech Globe
-
-# --- 🔒 SECURITY SYSTEM ---
+# --- 🔒 PREMIUM SECURITY SYSTEM ---
 def check_password():
     def password_entered():
         if st.session_state["password"] == "TEXTILE_KING":
@@ -128,13 +130,42 @@ def check_password():
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        st.markdown("<br><br><h1 style='text-align:center; color:#ff4b4b; text-shadow:none;'>🛑 CLASSIFIED ACCESS</h1>", unsafe_allow_html=True)
-        col1, col2, col3 = st.columns([1,2,1])
+        # --- LOGIN SCREEN LAYOUT ---
+        # We use empty columns to center the login box
+        col1, col2, col3 = st.columns([1, 1.5, 1])
+        
         with col2:
-            st.text_input("ENTER PASSCODE:", type="password", on_change=password_entered, key="password")
+            st.markdown("<br><br><br>", unsafe_allow_html=True) # Spacer
+            
+            # THE LOGO & LOGIN BOX
+            st.markdown("""
+            <div class="login-box">
+                <div class="rotex-logo-container">
+                    <span class="rotex-text ro-cyan" style="font-size: 60px;">RO</span>
+                    <span class="rotex-text tex-magenta" style="font-size: 60px;">Tex</span><br>
+                    <div class="rotex-tagline">SECURE INDUSTRIAL ACCESS</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # The Input Field (Streamlit widgets can't be inside HTML div, so we place it right below)
+            st.text_input("AUTHENTICATION KEY", type="password", on_change=password_entered, key="password")
+            
+            st.markdown("<div style='text-align:center; color:#444; margin-top:10px; font-size:12px;'>ENCRYPTED CONNECTION ESTABLISHED</div>", unsafe_allow_html=True)
+            
         return False
     elif not st.session_state["password_correct"]:
-        st.error("⛔ ACCESS DENIED")
+        # Wrong Password View
+        col1, col2, col3 = st.columns([1, 1.5, 1])
+        with col2:
+             st.markdown("<br><br><br>", unsafe_allow_html=True)
+             st.markdown("""
+                <div class="login-box" style="border-color: red;">
+                    <h2 style="color:red; text-shadow: 0 0 10px red;">⛔ ACCESS DENIED</h2>
+                    <p>INVALID CREDENTIALS</p>
+                </div>
+             """, unsafe_allow_html=True)
+             st.text_input("AUTHENTICATION KEY", type="password", on_change=password_entered, key="password")
         return False
     else:
         return True
@@ -215,15 +246,18 @@ def get_research_papers(topic):
         else: return []
     except: return []
 
-# --- 🚀 THE APEX LAUNCHER ---
+# --- 🚀 LAUNCH SEQUENCE ---
 if check_password():
     
     # --- SIDEBAR NAV ---
     with st.sidebar:
-        if lottie_tech:
-            st_lottie(lottie_tech, height=150, key="sidebar_anim")
-        st.title("TEX-OS™")
-        st.markdown("<div style='text-align: center; color: #888; font-size: 12px;'>APEX EDITION v10.0</div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="rotex-logo-container">
+            <span class="rotex-text ro-cyan" style="font-size: 48px;">RO</span><span class="rotex-text tex-magenta" style="font-size: 48px;">Tex</span><br>
+            <div class="rotex-tagline">SYSTEMS ONLINE</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
         st.divider()
         menu = st.radio("SYSTEM MODULES", ["WAR ROOM", "VISION AI", "LOGISTICS", "DEAL BREAKER", "R&D LAB"])
         st.divider()
@@ -241,8 +275,6 @@ if check_password():
     # --- 1. WAR ROOM ---
     if menu == "WAR ROOM":
         st.markdown("## 📡 MARKET INTELLIGENCE")
-        
-        # Metrics with new styles
         c1, c2, c3 = st.columns(3)
         curr = df['Yarn_Fair_Value'].iloc[-1]
         nxt = preds[-1]
@@ -253,7 +285,6 @@ if check_password():
         with c3: st.metric("GAS (HENRY HUB)", f"${df['Gas_USD'].iloc[-1]:.2f}", "LIVE")
 
         st.divider()
-
         st.markdown("### 📈 PRICE FORECAST ENGINE")
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], name='HISTORY', line=dict(color='#00d2ff', width=3)))
@@ -263,7 +294,6 @@ if check_password():
         st.plotly_chart(fig, use_container_width=True)
 
         st.divider()
-
         st.markdown("### 🚨 GLOBAL THREAT STREAM")
         if news_items:
             n1, n2 = st.columns(2)
@@ -306,13 +336,11 @@ if check_password():
             qty = st.number_input("QUANTITY (KG)", value=10000)
             knit_cost = st.number_input("KNITTING COST ($/KG)", value=0.60)
             overhead = st.number_input("OVERHEAD ($/KG)", value=0.15)
-        
         with c2:
             total_cost = current_yarn_cost + knit_cost + overhead
             margin = buyer_price - total_cost
             st.metric("MARKET YARN PRICE", f"${current_yarn_cost:.2f}")
             st.metric("TOTAL COST", f"${total_cost:.2f}")
-            
             st.divider()
             if margin > 0:
                 st.success(f"✅ PROFIT: ${margin:.2f}/kg | TOTAL: ${margin*qty:,.2f}")
