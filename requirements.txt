@@ -10,3 +10,4 @@ requests
 pydeck
 streamlit-lottie
 fpdf
+matplotlib
