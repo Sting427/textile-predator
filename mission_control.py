@@ -147,3 +147,13 @@ with tab2:
             st.error(f"❌ REJECT: {count} Defects Detected.")
         else:
             st.success("✅ PASS: No Visible Defects.")
+            # --- 🔄 THE HEARTBEAT (AUTO-REFRESH) ---
+import time
+
+st.divider() # Draw a line to separate the footer
+
+# The Toggle Switch
+if st.toggle("🔴 ACTIVATE LIVE MODE (Auto-Refresh every 60s)", value=False):
+    st.toast("⏳ Refreshing in 60 seconds...")
+    time.sleep(60)
+    st.rerun()
