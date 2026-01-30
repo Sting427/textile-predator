@@ -16,22 +16,18 @@ st.set_page_config(page_title="TEXTILE PREDATOR // COMMAND", layout="wide", page
 st.markdown("""
     <style>
     .big-font { font-size:30px !important; font-weight: bold; color: #FF4B4B; }
-    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-    .stTabs [data-baseweb="tab"] { height: 50px; white-space: pre-wrap; background-color: #0E1117; border-radius: 4px 4px 0px 0px; gap: 1px; padding-top: 10px; padding-bottom: 10px; }
-    .stTabs [aria-selected="true"] { background-color: #262730; border-bottom: 2px solid #FF4B4B; }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 🧠 MODULE 1: THE ORACLE ---
 def load_market_data():
     tickers = ['CT=F', 'NG=F']
-    # Use fallback if yfinance fails (common on free cloud)
     try:
         data = yf.download(tickers, period="1y", interval="1d", progress=False)['Close']
         data.columns = ['Cotton_USD', 'Gas_USD']
         data = data.dropna()
     except:
-        # Emergency Simulation Data if Wall Street blocks the connection
+        # Fallback if connection fails
         dates = pd.date_range(end=pd.Timestamp.today(), periods=365)
         data = pd.DataFrame({
             'Cotton_USD': np.random.uniform(80, 100, 365),
@@ -71,38 +67,35 @@ def process_fabric_image(image_file):
             count += 1
     return output_img, count
 
-# --- 🌍 MODULE 3: THE GLOBAL INTERCEPTOR ---
+# --- 🌍 MODULE 3: THE 3D GLOBE (NEW!) ---
 def render_3d_map():
-    # 1. Define Coordinates
-    # Chittagong Port (The Target)
+    # Target: Chittagong Port, Bangladesh
     target = [91.8, 22.3] 
     
-    # Sources (USA, Brazil, India, Australia)
+    # Sources: The Global Cotton Belt
     sources = [
-        {"name": "Texas, USA", "coords": [-99.9, 31.9], "color": [0, 255, 0], "value": 100}, # Green Arc
-        {"name": "Sao Paulo, BR", "coords": [-46.6, -23.5], "color": [0, 128, 255], "value": 80}, # Blue Arc
-        {"name": "Mumbai, IN", "coords": [72.8, 19.0], "color": [255, 165, 0], "value": 150}, # Orange Arc
-        {"name": "Queensland, AU", "coords": [142.7, -20.9], "color": [255, 0, 255], "value": 60} # Purple Arc
+        {"name": "Texas, USA", "coords": [-99.9, 31.9], "color": [0, 255, 0]},   # Green
+        {"name": "Sao Paulo, Brazil", "coords": [-46.6, -23.5], "color": [0, 128, 255]}, # Blue
+        {"name": "Mumbai, India", "coords": [72.8, 19.0], "color": [255, 165, 0]}, # Orange
+        {"name": "Queensland, Australia", "coords": [142.7, -20.9], "color": [255, 0, 255]} # Purple
     ]
     
-    # 2. Build Arc Data (The Flight Paths)
     arc_data = []
     for s in sources:
         arc_data.append({
             "source": s["coords"],
             "target": target,
             "name": s["name"],
-            "value": s["value"],
             "color": s["color"]
         })
     
-    # 3. Configure the 3D Layer
+    # The Flight Paths (Arcs)
     layer = pdk.Layer(
         "ArcLayer",
         data=arc_data,
         get_source_position="source",
         get_target_position="target",
-        get_width=5,
+        get_width=4,
         get_tilt=15,
         get_source_color="color",
         get_target_color="color",
@@ -110,27 +103,21 @@ def render_3d_map():
         auto_highlight=True,
     )
 
-    # 4. The 3D Column Layer (Price Heatmap)
-    col_layer = pdk.Layer(
-        "ColumnLayer",
-        data=arc_data,
-        get_position="source",
-        get_elevation="value * 1000",
-        elevation_scale=100,
-        radius=200000,
-        get_fill_color="color",
-        pickable=True,
+    # The Map View
+    view_state = pdk.ViewState(latitude=20, longitude=60, zoom=1, pitch=45)
+    
+    return pdk.Deck(
+        layers=[layer], 
+        initial_view_state=view_state, 
+        map_style="mapbox://styles/mapbox/dark-v10",
+        tooltip={"text": "Shipment Origin: {name}"}
     )
 
-    # 5. Render Map
-    view_state = pdk.ViewState(latitude=20, longitude=0, zoom=1.5, pitch=45, bearing=0)
-    r = pdk.Deck(layers=[layer, col_layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/dark-v10", tooltip={"text": "{name}\nSupply Volume: {value} Tons"})
-    return r
-
 # --- 🖥️ DASHBOARD UI ---
-st.title("💀 TEXTILE PREDATOR // COMMAND v2.0")
+st.title("💀 TEXTILE PREDATOR // COMMAND v3.0")
 
-tab1, tab2, tab3 = st.tabs(["📈 WAR ROOM", "👁️ FABRIC EYE", "🌍 GLOBAL INTERCEPTOR"])
+# THE TABS
+tab1, tab2, tab3 = st.tabs(["📈 WAR ROOM", "👁️ FABRIC EYE", "🌍 GLOBAL LOGISTICS (3D)"])
 
 with tab1:
     st.markdown("### 📡 MARKET INTELLIGENCE")
@@ -138,16 +125,17 @@ with tab1:
         df = load_market_data()
         preds = run_prediction(df)
     
+    # Metrics
     curr = df['Yarn_Fair_Value'].iloc[-1]
     nxt = preds[-1]
     delta = ((nxt - curr)/curr)*100
-    color = "normal" if delta < 1 else "inverse"
     
     c1, c2, c3 = st.columns(3)
-    c1.metric("Yarn Fair Value", f"${curr:.2f}", f"{delta:.2f}% (7-Day)", delta_color=color)
+    c1.metric("Yarn Fair Value", f"${curr:.2f}", f"{delta:.2f}% (7-Day)")
     c2.metric("Cotton (NYMEX)", f"${df['Cotton_USD'].iloc[-1]:.2f}", "Live")
     c3.metric("Gas (Henry Hub)", f"${df['Gas_USD'].iloc[-1]:.2f}", "Live")
     
+    # Chart
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], name='History', line=dict(color='#3498db')))
     future_dates = pd.date_range(start=df.index[-1], periods=8)[1:]
@@ -177,13 +165,13 @@ with tab2:
         else: st.success("✅ APPROVED")
 
 with tab3:
-    st.markdown("### 🌍 GLOBAL LOGISTICS TRACKER")
-    st.write("Real-time visualization of simulated cotton shipments to Chittagong Port.")
+    st.markdown("### 🌍 GLOBAL SUPPLY CHAIN")
+    st.write("Visualizing Live Cotton Shipments to Chittagong Port.")
     
     # RENDER THE 3D GLOBE
     st.pydeck_chart(render_3d_map())
     
-    st.caption("🟢 USA (Texas) | 🔵 Brazil (Santos) | 🟠 India (Mumbai) | 🟣 Australia")
+    st.caption("🟢 USA | 🔵 Brazil | 🟠 India | 🟣 Australia")
     
 # --- 🔄 AUTO-REFRESH ---
 st.divider()
