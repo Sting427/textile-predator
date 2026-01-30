@@ -10,71 +10,71 @@ import feedparser
 import requests
 import time
 
-# --- 🏢 PAGE CONFIGURATION ---
+# --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="TexOS // Enterprise",
+    page_title="TEX-OS // COMMAND",
     layout="wide",
-    page_icon="🧵",
+    page_icon="💀",
     initial_sidebar_state="expanded"
 )
 
-# --- 🎨 ENTERPRISE CSS (THE SUIT) ---
+# --- 🎨 THE "BLACK PANTHER" THEME ---
 st.markdown("""
     <style>
-    /* MAIN BACKGROUND */
+    /* FORCE DARK MODE BACKGROUND */
     .stApp {
-        background-color: #F8F9FA;
-        font-family: 'Helvetica Neue', sans-serif;
-    }
-    
-    /* SIDEBAR STYLING */
-    section[data-testid="stSidebar"] {
         background-color: #0E1117;
-        color: white;
+        color: #FAFAFA;
     }
     
-    /* METRIC CARDS (Professional White Boxes) */
+    /* SIDEBAR */
+    section[data-testid="stSidebar"] {
+        background-color: #000000;
+        border-right: 1px solid #333;
+    }
+    
+    /* METRIC CARDS (Neon Glow) */
     div[data-testid="metric-container"] {
-        background-color: #FFFFFF;
-        border: 1px solid #E0E0E0;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        color: #333;
+        background-color: #1E1E1E;
+        border: 1px solid #333;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 5px solid #00E5FF; /* Cyan Accent */
     }
     
     /* HEADERS */
     h1, h2, h3 {
-        color: #1A237E; /* Navy Blue */
-        font-weight: 700;
+        color: #00E5FF !important;
+        font-family: 'Courier New', monospace;
     }
     
-    /* CUSTOM CARD FOR NEWS & PAPERS */
-    .pro-card {
-        background-color: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        margin-bottom: 15px;
-        border-left: 5px solid #1A237E;
+    /* NEWS & PAPER CARDS */
+    .info-card {
+        background-color: #161B22;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #30363D;
+    }
+    .info-card a {
+        color: #58A6FF;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: bold;
     }
     
     /* BUTTONS */
     .stButton>button {
-        background-color: #1A237E;
+        background-color: #238636;
         color: white;
-        border-radius: 5px;
         border: none;
-        padding: 10px 24px;
-    }
-    .stButton>button:hover {
-        background-color: #304FFE;
-        color: white;
+        border-radius: 4px;
+        font-weight: bold;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🔒 ENTERPRISE LOGIN ---
+# --- 🔒 SECURITY SYSTEM ---
 def check_password():
     def password_entered():
         if st.session_state["password"] == "TEXTILE_KING":
@@ -84,13 +84,10 @@ def check_password():
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        # Professional Login Screen
+        st.markdown("<br><br><h1 style='text-align:center; color:red;'>🛑 CLASSIFIED ACCESS</h1>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
-            st.markdown("<br><br><br>", unsafe_allow_html=True)
-            st.markdown("## 🔒 TexOS Enterprise Login")
-            st.info("Authorized Personnel Only. All access is logged.")
-            st.text_input("Access Key", type="password", on_change=password_entered, key="password")
+            st.text_input("ENTER PASSCODE:", type="password", on_change=password_entered, key="password")
         return False
     elif not st.session_state["password_correct"]:
         st.error("⛔ ACCESS DENIED")
@@ -98,7 +95,7 @@ def check_password():
     else:
         return True
 
-# --- 🧠 BACKEND LOGIC (The Brains) ---
+# --- 🧠 BACKEND LOGIC ---
 @st.cache_data(ttl=3600)
 def load_market_data():
     tickers = ['CT=F', 'NG=F']
@@ -156,15 +153,14 @@ def process_fabric_image(image_file):
 def render_3d_map():
     target = [91.8, 22.3] 
     sources = [
-        {"name": "Texas, USA", "coords": [-99.9, 31.9], "color": [26, 35, 126]}, # Navy
-        {"name": "Sao Paulo, BR", "coords": [-46.6, -23.5], "color": [48, 79, 254]}, # Blue
-        {"name": "Mumbai, IN", "coords": [72.8, 19.0], "color": [255, 111, 0]} # Orange
+        {"name": "Texas, USA", "coords": [-99.9, 31.9], "color": [0, 229, 255]}, # Cyan
+        {"name": "Sao Paulo, BR", "coords": [-46.6, -23.5], "color": [0, 255, 0]}, # Green
+        {"name": "Mumbai, IN", "coords": [72.8, 19.0], "color": [255, 165, 0]} # Orange
     ]
     arc_data = [{"source": s["coords"], "target": target, "name": s["name"], "color": s["color"]} for s in sources]
-    layer = pdk.Layer("ArcLayer", data=arc_data, get_source_position="source", get_target_position="target", get_width=4, get_tilt=15, get_source_color="color", get_target_color="color", pickable=True, auto_highlight=True)
+    layer = pdk.Layer("ArcLayer", data=arc_data, get_source_position="source", get_target_position="target", get_width=5, get_tilt=15, get_source_color="color", get_target_color="color", pickable=True, auto_highlight=True)
     view_state = pdk.ViewState(latitude=20, longitude=60, zoom=1, pitch=45)
-    # Using a lighter map style for corporate look
-    return pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/light-v10", tooltip={"text": "{name}"})
+    return pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/dark-v10", tooltip={"text": "{name}"})
 
 def get_research_papers(topic):
     query = f"textile {topic}"
@@ -175,144 +171,119 @@ def get_research_papers(topic):
         else: return []
     except: return []
 
-# --- 🚀 THE APP LAUNCHER ---
+# --- 🚀 THE DASHBOARD LAUNCHER ---
 if check_password():
     
-    # --- SIDEBAR NAVIGATION ---
+    # --- SIDEBAR NAV ---
     with st.sidebar:
-        st.title("TexOS™")
-        st.caption("Enterprise Edition v8.0")
+        st.title("TEX-OS™")
+        st.markdown("`v9.0 | STATUS: ONLINE`")
         st.divider()
-        menu = st.radio("MAIN MENU", ["Dashboard", "Vision AI", "Global Logistics", "Profit Calc", "R&D Library"], label_visibility="collapsed")
+        menu = st.radio("NAVIGATION", ["WAR ROOM", "VISION AI", "LOGISTICS", "DEAL BREAKER", "R&D LAB"])
         st.divider()
-        st.info("System Status: ● Online")
-        if st.button("Logout"):
+        if st.button("LOGOUT"):
             st.session_state["password_correct"] = False
             st.rerun()
 
     # --- LOAD DATA ---
-    with st.spinner("Initializing Enterprise Modules..."):
+    with st.spinner("ESTABLISHING UPLINK..."):
         df = load_market_data()
         preds = run_prediction(df)
         current_yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
         news_items = get_news_stealth()
 
-    # --- 1. DASHBOARD ---
-    if menu == "Dashboard":
-        st.markdown("## 📊 Executive Dashboard")
-        st.markdown("Real-time market overview and threat detection.")
+    # --- 1. WAR ROOM ---
+    if menu == "WAR ROOM":
+        st.markdown("## 📡 MARKET COMMAND")
         
-        # Top Metrics Row
-        c1, c2, c3, c4 = st.columns(4)
+        # Metrics
+        c1, c2, c3 = st.columns(3)
         curr = df['Yarn_Fair_Value'].iloc[-1]
         nxt = preds[-1]
         delta = ((nxt - curr)/curr)*100
         
-        with c1: st.metric("Yarn Fair Value", f"${curr:.2f}", f"{delta:.2f}%")
-        with c2: st.metric("Cotton (NYMEX)", f"${df['Cotton_USD'].iloc[-1]:.2f}", "+0.5%")
-        with c3: st.metric("Gas (Henry Hub)", f"${df['Gas_USD'].iloc[-1]:.2f}", "-1.2%")
-        with c4: st.metric("Factory Output", "12.5 Tons", "On Target")
+        with c1: st.metric("YARN FAIR VALUE", f"${curr:.2f}", f"{delta:.2f}%")
+        with c2: st.metric("COTTON (NYMEX)", f"${df['Cotton_USD'].iloc[-1]:.2f}", "LIVE")
+        with c3: st.metric("GAS (HENRY HUB)", f"${df['Gas_USD'].iloc[-1]:.2f}", "LIVE")
 
         st.divider()
 
-        # Chart & News Split
         col_chart, col_news = st.columns([2, 1])
         
         with col_chart:
-            st.markdown("### 📈 Price Forecast Model")
+            st.markdown("### 📈 PRICE FORECAST")
             fig = go.Figure()
-            # Professional White Chart Theme
-            fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], name='Historical Data', line=dict(color='#1A237E', width=2)))
+            # Dark Mode Chart
+            fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], name='HISTORY', line=dict(color='#00E5FF', width=2)))
             future_dates = pd.date_range(start=df.index[-1], periods=8)[1:]
-            fig.add_trace(go.Scatter(x=future_dates, y=preds, name='AI Forecast', line=dict(color='#FF6F00', width=2, dash='dash')))
-            fig.update_layout(height=400, template="plotly_white", margin=dict(l=20,r=20,t=40,b=20), hovermode="x unified")
+            fig.add_trace(go.Scatter(x=future_dates, y=preds, name='AI PREDICTION', line=dict(color='#FF0055', width=2, dash='dot')))
+            fig.update_layout(height=400, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=20,r=20,t=40,b=20))
             st.plotly_chart(fig, use_container_width=True)
 
         with col_news:
-            st.markdown("### 📰 Market Brief")
+            st.markdown("### 🚨 INTEL FEED")
             if news_items:
                 for item in news_items:
                     st.markdown(f"""
-                    <div class="pro-card">
-                        <a href="{item.link}" target="_blank" style="text-decoration: none; color: #1A237E;">
-                            <b>{item.title}</b>
-                        </a><br>
-                        <span style="font-size: 12px; color: #666;">{item.published[:16]}</span>
+                    <div class="info-card">
+                        <a href="{item.link}" target="_blank">➤ {item.title}</a><br>
+                        <span style="color: #888; font-size: 12px;">{item.published[:16]}</span>
                     </div>
                     """, unsafe_allow_html=True)
             else:
-                st.warning("No critical alerts.")
+                st.warning("NO INTEL AVAILABLE")
 
     # --- 2. VISION AI ---
-    elif menu == "Vision AI":
-        st.markdown("## 👁️ Quality Control (QC) AI")
-        st.write("Upload fabric samples for automated defect detection.")
-        
-        uploaded_file = st.file_uploader("Upload Sample Image", type=['jpg', 'png', 'jpeg'])
+    elif menu == "VISION AI":
+        st.markdown("## 👁️ DEFECT SCANNER")
+        uploaded_file = st.file_uploader("UPLOAD FABRIC IMAGE", type=['jpg', 'png', 'jpeg'])
         if uploaded_file:
             c1, c2 = st.columns(2)
             processed, count = process_fabric_image(uploaded_file)
-            with c1:
-                st.image(uploaded_file, caption="Original Sample", use_column_width=True)
-            with c2:
-                st.image(processed, caption=f"Analysis: {count} Defects Found", use_column_width=True, channels="BGR")
-                if count > 0:
-                    st.error(f"❌ QC FAILED: {count} Defects Detected.")
-                else:
-                    st.success("✅ QC PASSED: Fabric is clean.")
+            with c1: st.image(uploaded_file, caption="SOURCE", use_column_width=True)
+            with c2: 
+                st.image(processed, caption=f"DETECTED: {count} FAULTS", use_column_width=True, channels="BGR")
+                if count > 0: st.error(f"❌ REJECT LOT ({count} DEFECTS)")
+                else: st.success("✅ APPROVED")
 
-    # --- 3. GLOBAL LOGISTICS ---
-    elif menu == "Global Logistics":
-        st.markdown("## 🌍 Supply Chain Visualization")
+    # --- 3. LOGISTICS ---
+    elif menu == "LOGISTICS":
+        st.markdown("## 🌍 SUPPLY CHAIN (LIVE)")
         st.pydeck_chart(render_3d_map())
-        st.caption("Live visualization of inbound raw materials.")
 
-    # --- 4. PROFIT CALCULATOR ---
-    elif menu == "Profit Calc":
-        st.markdown("## 💰 Deal Evaluation Engine")
+    # --- 4. DEAL BREAKER ---
+    elif menu == "DEAL BREAKER":
+        st.markdown("## 💰 PROFIT CALCULATOR")
+        c1, c2 = st.columns(2)
+        with c1:
+            buyer_price = st.number_input("BUYER OFFER ($/KG)", value=4.50, step=0.05)
+            qty = st.number_input("QUANTITY (KG)", value=10000)
+            knit_cost = st.number_input("KNITTING COST ($/KG)", value=0.60)
+            overhead = st.number_input("OVERHEAD ($/KG)", value=0.15)
         
-        with st.container():
-            st.markdown('<div class="pro-card">', unsafe_allow_html=True)
-            c1, c2 = st.columns(2)
-            with c1:
-                st.subheader("Contract Details")
-                buyer_price = st.number_input("Buyer Offer ($/kg)", value=4.50, step=0.05)
-                qty = st.number_input("Quantity (kg)", value=10000)
-            with c2:
-                st.subheader("Cost Structure")
-                knit_cost = st.number_input("Production Cost ($/kg)", value=0.60)
-                overhead = st.number_input("Overhead ($/kg)", value=0.15)
-            st.markdown('</div>', unsafe_allow_html=True)
+        with c2:
+            total_cost = current_yarn_cost + knit_cost + overhead
+            margin = buyer_price - total_cost
+            st.metric("MARKET YARN PRICE", f"${current_yarn_cost:.2f}")
+            st.metric("TOTAL COST", f"${total_cost:.2f}")
+            
+            st.divider()
+            if margin > 0:
+                st.success(f"✅ PROFIT: ${margin:.2f}/kg | TOTAL: ${margin*qty:,.2f}")
+            else:
+                st.error(f"❌ LOSS: ${margin:.2f}/kg | TOTAL: ${margin*qty:,.2f}")
 
-        st.divider()
-        
-        # Calculation
-        total_cost = current_yarn_cost + knit_cost + overhead
-        margin = buyer_price - total_cost
-        
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Market Yarn Price", f"${current_yarn_cost:.2f}")
-        m2.metric("Total Cost to Produce", f"${total_cost:.2f}")
-        
-        if margin > 0:
-            m3.metric("Net Profit Margin", f"${margin:.2f}/kg", "PROFITABLE", delta_color="normal")
-            st.success(f"✅ RECOMMENDATION: ACCEPT DEAL. Total Profit: ${margin*qty:,.2f}")
-        else:
-            m3.metric("Net Loss", f"${margin:.2f}/kg", "LOSS", delta_color="inverse")
-            st.error(f"❌ RECOMMENDATION: REJECT DEAL. Potential Loss: ${margin*qty:,.2f}")
-
-    # --- 5. R&D LIBRARY ---
-    elif menu == "R&D Library":
-        st.markdown("## 📚 Research & Development")
-        topic = st.selectbox("Search Topic", ["Sustainable Dyeing", "Smart Fabrics", "Recycled Polyester", "Nano-Finishing"])
-        
-        if st.button("Search Database"):
-            with st.spinner("Querying Academic Database..."):
+    # --- 5. R&D LAB ---
+    elif menu == "R&D LAB":
+        st.markdown("## 🔬 RESEARCH ARCHIVE")
+        topic = st.selectbox("SELECT TOPIC", ["Sustainable Dyeing", "Smart Fabrics", "Recycled Polyester", "Nano-Finishing"])
+        if st.button("INITIATE SEARCH"):
+            with st.spinner("SEARCHING DATABASE..."):
                 papers = get_research_papers(topic)
                 for p in papers:
                     st.markdown(f"""
-                    <div class="pro-card">
-                        <h4>{p.get('title')}</h4>
-                        <p style="color:#555;">{p.get('year')} | <a href="{p.get('url')}" target="_blank">Read Full Paper</a></p>
+                    <div class="info-card">
+                        <a href="{p.get('url')}" target="_blank">📄 {p.get('title')}</a><br>
+                        <span style="color:#888;">{p.get('year')}</span>
                     </div>
                     """, unsafe_allow_html=True)
