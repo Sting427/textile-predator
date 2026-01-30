@@ -9,70 +9,114 @@ import pydeck as pdk
 import feedparser
 import requests
 import time
+from streamlit_lottie import st_lottie
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="TEX-OS // COMMAND",
+    page_title="TEX-OS // APEX",
     layout="wide",
-    page_icon="💀",
+    page_icon="💠",
     initial_sidebar_state="expanded"
 )
 
-# --- 🎨 THE "BLACK PANTHER" THEME ---
+# --- 🎨 THE "APEX" THEME (CSS INJECTION) ---
 st.markdown("""
     <style>
-    /* FORCE DARK MODE BACKGROUND */
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&display=swap');
+
+    /* ANIMATED BACKGROUND */
     .stApp {
-        background-color: #0E1117;
-        color: #FAFAFA;
+        background: linear-gradient(-45deg, #000000, #0a0a0a, #1a0b2e, #000000);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        font-family: 'Rajdhani', sans-serif;
+        color: #e0e0e0;
     }
-    
-    /* SIDEBAR */
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* SIDEBAR STYLING */
     section[data-testid="stSidebar"] {
-        background-color: #000000;
+        background-color: rgba(0, 0, 0, 0.8);
         border-right: 1px solid #333;
+        backdrop-filter: blur(10px);
     }
     
-    /* METRIC CARDS (Neon Glow) */
+    /* GLASSMORPHISM CARDS */
     div[data-testid="metric-container"] {
-        background-color: #1E1E1E;
-        border: 1px solid #333;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         padding: 15px;
-        border-radius: 8px;
-        border-left: 5px solid #00E5FF; /* Cyan Accent */
+        border-radius: 12px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-left: 4px solid #00d2ff;
+    }
+    div[data-testid="metric-container"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 210, 255, 0.2);
     }
     
-    /* HEADERS */
-    h1, h2, h3 {
-        color: #00E5FF !important;
-        font-family: 'Courier New', monospace;
-    }
-    
-    /* NEWS & PAPER CARDS */
+    /* NEWS & INFO CARDS WITH HOVER GLOW */
     .info-card {
-        background-color: #161B22;
+        background: rgba(255, 255, 255, 0.03);
         padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        border: 1px solid #30363D;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+    }
+    .info-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: #00d2ff;
+        transform: translateX(5px);
     }
     .info-card a {
-        color: #58A6FF;
+        color: #00d2ff;
         text-decoration: none;
-        font-size: 16px;
-        font-weight: bold;
+        font-size: 18px;
+        font-weight: 700;
+        font-family: 'Rajdhani', sans-serif;
+    }
+    
+    /* TYPOGRAPHY */
+    h1, h2, h3 {
+        color: #ffffff !important;
+        font-family: 'Rajdhani', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
     }
     
     /* BUTTONS */
     .stButton>button {
-        background-color: #238636;
+        background: linear-gradient(90deg, #00d2ff, #3a7bd5);
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: 6px;
         font-weight: bold;
+        font-family: 'Rajdhani', sans-serif;
+        letter-spacing: 1px;
+        transition: all 0.3s;
+    }
+    .stButton>button:hover {
+        box-shadow: 0 0 15px rgba(0, 210, 255, 0.6);
+        transform: scale(1.02);
     }
     </style>
     """, unsafe_allow_html=True)
+
+# --- 🎞️ ANIMATION LOADER ---
+def load_lottieurl(url: str):
+    r = requests.get(url)
+    if r.status_code != 200: return None
+    return r.json()
+
+# Load Assets
+lottie_tech = load_lottieurl("https://lottie.host/5a67c57c-d698-4228-a37f-534d0b277d33/9qZ2F5W3rT.json") # Tech Globe
 
 # --- 🔒 SECURITY SYSTEM ---
 def check_password():
@@ -84,7 +128,7 @@ def check_password():
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        st.markdown("<br><br><h1 style='text-align:center; color:red;'>🛑 CLASSIFIED ACCESS</h1>", unsafe_allow_html=True)
+        st.markdown("<br><br><h1 style='text-align:center; color:#ff4b4b; text-shadow:none;'>🛑 CLASSIFIED ACCESS</h1>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
             st.text_input("ENTER PASSCODE:", type="password", on_change=password_entered, key="password")
@@ -153,9 +197,9 @@ def process_fabric_image(image_file):
 def render_3d_map():
     target = [91.8, 22.3] 
     sources = [
-        {"name": "Texas, USA", "coords": [-99.9, 31.9], "color": [0, 229, 255]}, # Cyan
-        {"name": "Sao Paulo, BR", "coords": [-46.6, -23.5], "color": [0, 255, 0]}, # Green
-        {"name": "Mumbai, IN", "coords": [72.8, 19.0], "color": [255, 165, 0]} # Orange
+        {"name": "Texas, USA", "coords": [-99.9, 31.9], "color": [0, 229, 255]},
+        {"name": "Sao Paulo, BR", "coords": [-46.6, -23.5], "color": [0, 255, 0]},
+        {"name": "Mumbai, IN", "coords": [72.8, 19.0], "color": [255, 165, 0]}
     ]
     arc_data = [{"source": s["coords"], "target": target, "name": s["name"], "color": s["color"]} for s in sources]
     layer = pdk.Layer("ArcLayer", data=arc_data, get_source_position="source", get_target_position="target", get_width=5, get_tilt=15, get_source_color="color", get_target_color="color", pickable=True, auto_highlight=True)
@@ -171,22 +215,24 @@ def get_research_papers(topic):
         else: return []
     except: return []
 
-# --- 🚀 THE DASHBOARD LAUNCHER ---
+# --- 🚀 THE APEX LAUNCHER ---
 if check_password():
     
     # --- SIDEBAR NAV ---
     with st.sidebar:
+        if lottie_tech:
+            st_lottie(lottie_tech, height=150, key="sidebar_anim")
         st.title("TEX-OS™")
-        st.markdown("`v9.0 | STATUS: ONLINE`")
+        st.markdown("<div style='text-align: center; color: #888; font-size: 12px;'>APEX EDITION v10.0</div>", unsafe_allow_html=True)
         st.divider()
-        menu = st.radio("NAVIGATION", ["WAR ROOM", "VISION AI", "LOGISTICS", "DEAL BREAKER", "R&D LAB"])
+        menu = st.radio("SYSTEM MODULES", ["WAR ROOM", "VISION AI", "LOGISTICS", "DEAL BREAKER", "R&D LAB"])
         st.divider()
-        if st.button("LOGOUT"):
+        if st.button("TERMINATE SESSION"):
             st.session_state["password_correct"] = False
             st.rerun()
 
     # --- LOAD DATA ---
-    with st.spinner("ESTABLISHING UPLINK..."):
+    with st.spinner("ESTABLISHING SECURE UPLINK..."):
         df = load_market_data()
         preds = run_prediction(df)
         current_yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
@@ -194,9 +240,9 @@ if check_password():
 
     # --- 1. WAR ROOM ---
     if menu == "WAR ROOM":
-        st.markdown("## 📡 MARKET COMMAND")
+        st.markdown("## 📡 MARKET INTELLIGENCE")
         
-        # Metrics
+        # Metrics with new styles
         c1, c2, c3 = st.columns(3)
         curr = df['Yarn_Fair_Value'].iloc[-1]
         nxt = preds[-1]
@@ -208,30 +254,30 @@ if check_password():
 
         st.divider()
 
-        col_chart, col_news = st.columns([2, 1])
-        
-        with col_chart:
-            st.markdown("### 📈 PRICE FORECAST")
-            fig = go.Figure()
-            # Dark Mode Chart
-            fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], name='HISTORY', line=dict(color='#00E5FF', width=2)))
-            future_dates = pd.date_range(start=df.index[-1], periods=8)[1:]
-            fig.add_trace(go.Scatter(x=future_dates, y=preds, name='AI PREDICTION', line=dict(color='#FF0055', width=2, dash='dot')))
-            fig.update_layout(height=400, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=20,r=20,t=40,b=20))
-            st.plotly_chart(fig, use_container_width=True)
+        st.markdown("### 📈 PRICE FORECAST ENGINE")
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], name='HISTORY', line=dict(color='#00d2ff', width=3)))
+        future_dates = pd.date_range(start=df.index[-1], periods=8)[1:]
+        fig.add_trace(go.Scatter(x=future_dates, y=preds, name='AI PREDICTION', line=dict(color='#ff0055', width=3, dash='dot')))
+        fig.update_layout(height=450, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=20,r=20,t=40,b=20), hovermode="x unified")
+        st.plotly_chart(fig, use_container_width=True)
 
-        with col_news:
-            st.markdown("### 🚨 INTEL FEED")
-            if news_items:
-                for item in news_items:
-                    st.markdown(f"""
-                    <div class="info-card">
-                        <a href="{item.link}" target="_blank">➤ {item.title}</a><br>
-                        <span style="color: #888; font-size: 12px;">{item.published[:16]}</span>
-                    </div>
-                    """, unsafe_allow_html=True)
-            else:
-                st.warning("NO INTEL AVAILABLE")
+        st.divider()
+
+        st.markdown("### 🚨 GLOBAL THREAT STREAM")
+        if news_items:
+            n1, n2 = st.columns(2)
+            for i, item in enumerate(news_items):
+                card_html = f"""
+                <div class="info-card">
+                    <a href="{item.link}" target="_blank">➤ {item.title}</a><br>
+                    <span style="color: #888; font-size: 12px; font-family: sans-serif;">{item.published[:16]}</span>
+                </div>
+                """
+                if i % 2 == 0: n1.markdown(card_html, unsafe_allow_html=True)
+                else: n2.markdown(card_html, unsafe_allow_html=True)
+        else:
+            st.warning("NO INTEL AVAILABLE")
 
     # --- 2. VISION AI ---
     elif menu == "VISION AI":
@@ -270,6 +316,7 @@ if check_password():
             st.divider()
             if margin > 0:
                 st.success(f"✅ PROFIT: ${margin:.2f}/kg | TOTAL: ${margin*qty:,.2f}")
+                st.balloons()
             else:
                 st.error(f"❌ LOSS: ${margin:.2f}/kg | TOTAL: ${margin*qty:,.2f}")
 
