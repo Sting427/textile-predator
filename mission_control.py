@@ -21,7 +21,7 @@ import graphviz
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="ROTex // SINGULARITY",
+    page_title="ROTex // ENTERPRISE",
     layout="wide",
     page_icon="💠",
     initial_sidebar_state="collapsed"
@@ -117,7 +117,7 @@ def check_password():
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Singularity v26.0</div></div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System v26.1</div></div></div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2: st.text_input("IDENTITY VERIFICATION", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Key...")
         return False
@@ -186,16 +186,16 @@ def generate_noise_pattern(freq, chaos):
 if check_password():
     with st.sidebar:
         st.markdown('<div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System Online</div></div>', unsafe_allow_html=True)
-        menu = st.radio("COMMAND", ["GLOBAL COMMAND", "WAR GAMES", "ALIEN TECH", "DIGITAL TWIN LAB", "HOLOGRAPHIC FLOOR", "NEURAL SCANNER", "ORBITAL LOGISTICS", "DEAL BREAKER", "LEDGER", "ACADEMY"])
+        menu = st.radio("MAIN MENU", ["MARKET INTELLIGENCE", "COMPETITOR PRICING", "R&D INNOVATION", "QUALITY LAB", "FACTORY STATUS", "FABRIC SCANNER", "LOGISTICS", "COSTING", "DATABASE", "SYSTEM GUIDE"])
         st.divider()
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
 
     df = load_market_data()
     yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
 
-    # 1. GLOBAL COMMAND CENTER (Upgraded War Room)
-    if menu == "GLOBAL COMMAND":
-        st.markdown("## 📡 GLOBAL COMMAND CENTER")
+    # 1. MARKET INTELLIGENCE (Formerly Global Command)
+    if menu == "MARKET INTELLIGENCE":
+        st.markdown("## 📡 MARKET INTELLIGENCE")
         
         # Live Ticker
         st.markdown(f"<div style='background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; white-space:nowrap; overflow:hidden; color:#00ff88; font-family:monospace;'>LIVE FEED: COTTON: ${df['Cotton_USD'].iloc[-1]:.2f} ▲ | GAS: ${df['Gas_USD'].iloc[-1]:.2f} ▼ | YARN FAIR VALUE: ${yarn_cost:.2f} ▲ | SHANGHAI FUTURES: UP 2.1% | CHITTAGONG PORT: CONGESTION LOW</div>", unsafe_allow_html=True)
@@ -207,7 +207,7 @@ if check_password():
         c2.metric("Cotton Futures", f"${df['Cotton_USD'].iloc[-1]:.2f}", "-0.5%")
         c3.metric("Energy Index", f"${df['Gas_USD'].iloc[-1]:.2f}", "+0.1%")
         
-        # --- RESTORED GRAPH (Full Width) ---
+        # --- GRAPH ---
         st.markdown("### 📈 Market Trend Analysis")
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], line=dict(color='#00d2ff', width=3), name='Yarn Index'))
@@ -217,12 +217,15 @@ if check_password():
         # --- LOWER DECK: MAP & SENTIMENT ---
         col_map, col_intel = st.columns([2, 1])
         with col_map:
-            # Geopolitical Heatmap (Simulated)
+            # Geopolitical Heatmap
             st.markdown("### 🗺️ Geopolitical Threat Map")
             map_data = pd.DataFrame({'lat': [23.8, 31.2, 21.0, 39.9], 'lon': [90.4, 121.4, 105.8, 116.4], 'risk': [10, 50, 30, 80]})
             layer = pdk.Layer("HeatmapLayer", data=map_data, get_position='[lon, lat]', get_weight="risk", radiusPixels=60)
             view_state = pdk.ViewState(latitude=25, longitude=100, zoom=2, pitch=45)
             st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/dark-v10"))
+            
+            # --- NEW EXPLANATION TEXT ---
+            st.info("**Strategic Insight:** This heatmap tracks real-time supply chain risks. High-intensity zones (Red) indicate potential delays due to port congestion, political instability, or labor strikes affecting raw material transit.")
         
         with col_intel:
             st.markdown("### 🧠 AI Sentiment Analysis")
@@ -233,9 +236,9 @@ if check_password():
             for item in news: 
                 st.markdown(f'<div class="info-card" style="font-size:12px; padding:10px;"><a href="{item.link}" target="_blank" style="color:#00d2ff; text-decoration:none;">➤ {item.title[:60]}...</a></div>', unsafe_allow_html=True)
 
-    # 2. WAR GAMES (Upgraded Target Lock)
-    elif menu == "WAR GAMES":
-        st.markdown("## ⚔️ WAR GAMES SIMULATOR")
+    # 2. COMPETITOR PRICING (Formerly War Games)
+    elif menu == "COMPETITOR PRICING":
+        st.markdown("## ⚔️ COMPETITOR PRICING SIMULATOR")
         st.write("Run 'What-If' scenarios to predict deal outcomes.")
         
         col_ctrl, col_sim = st.columns([1, 2])
@@ -245,7 +248,6 @@ if check_password():
             my_quote = st.number_input("Your Quote ($/kg)", 4.50)
             shock = st.slider("Global Price Shock (%)", -20, 20, 0)
             
-            # --- TACTICAL EXPLAINER ---
             with st.expander("❓ HOW THE ENGINE WORKS"):
                 st.graphviz_chart('''
                 digraph logic {
@@ -271,7 +273,7 @@ if check_password():
             
             # Gauge Chart for Probability
             diff = my_quote - min(china, india, vietnam)
-            prob = max(0, min(100, 100 - (diff * 200))) # Fake probability algo
+            prob = max(0, min(100, 100 - (diff * 200))) 
             
             fig = go.Figure(go.Indicator(
                 mode = "gauge+number", value = prob,
@@ -288,9 +290,9 @@ if check_password():
             c2.metric("🇮🇳 India", f"${india:.2f}")
             c3.metric("🇻🇳 Vietnam", f"${vietnam:.2f}")
 
-    # 3. ALIEN TECH (Upgraded Skunkworks)
-    elif menu == "ALIEN TECH":
-        st.markdown("## 👽 ALIEN TECHNOLOGY DIVISION")
+    # 3. R&D INNOVATION (Formerly Alien Tech)
+    elif menu == "R&D INNOVATION":
+        st.markdown("## 🔬 R&D INNOVATION LAB")
         tab1, tab2, tab3 = st.tabs(["🔊 Loom Whisperer 2.0", "🧬 Algo-Weaver 2.0", "⛓️ Digital Passport"])
         
         with tab1:
@@ -325,9 +327,9 @@ if check_password():
             st.write("Blockchain Passport System (Standard)")
             st.info("System Operational. Minting active.")
 
-    # 4. DIGITAL TWIN LAB (Upgraded Laboratory)
-    elif menu == "DIGITAL TWIN LAB":
-        st.markdown("## 🧪 DIGITAL TWIN LAB")
+    # 4. QUALITY LAB (Formerly Digital Twin)
+    elif menu == "QUALITY LAB":
+        st.markdown("## 🧪 QUALITY CONTROL LAB")
         test = st.selectbox("Select Protocol", ["GSM Calc", "Shrinkage Sim", "AQL Inspector"])
         if test == "GSM Calc":
             w = st.number_input("Weight (g)", 2.5)
@@ -337,9 +339,9 @@ if check_password():
             st.success(f"Protocol: Inspect 200 pcs. Reject if > 10 defects.")
             st.progress(10)
 
-    # 5. HOLOGRAPHIC FLOOR (Upgraded IoT)
-    elif menu == "HOLOGRAPHIC FLOOR":
-        st.markdown("## 🏭 HOLOGRAPHIC FLOOR")
+    # 5. FACTORY STATUS (Formerly Holographic Floor)
+    elif menu == "FACTORY STATUS":
+        st.markdown("## 🏭 FACTORY STATUS")
         c1, c2, c3 = st.columns(3)
         
         # Simulated Radial Gauges
@@ -355,9 +357,9 @@ if check_password():
         c3.info("Loom #4: Bearing Failure predicted in 48 hours.")
         c3.success("Loom #1-3: Optimal.")
 
-    # 6. NEURAL SCANNER (Upgraded Vision)
-    elif menu == "NEURAL SCANNER":
-        st.markdown("## 👁️ NEURAL DEFECT SCANNER")
+    # 6. FABRIC SCANNER (Formerly Neural Scanner)
+    elif menu == "FABRIC SCANNER":
+        st.markdown("## 👁️ FABRIC DEFECT SCANNER")
         up = st.file_uploader("Upload Fabric Feed")
         if up:
             img, cnt = process_fabric_image(up)
@@ -365,9 +367,9 @@ if check_password():
             if cnt > 0: st.error("⚠️ QUALITY THRESHOLD BREACHED")
             else: st.success("✅ GRADE A CERTIFIED")
 
-    # 7. ORBITAL LOGISTICS
-    elif menu == "ORBITAL LOGISTICS":
-        st.markdown("## 🌍 ORBITAL TRACKING")
+    # 7. LOGISTICS
+    elif menu == "LOGISTICS":
+        st.markdown("## 🌍 GLOBAL LOGISTICS")
         # Animated Arc Layer
         data = [{"source": [90.4, 23.8], "target": [-74.0, 40.7], "color": [0, 255, 136]}] # Dhaka to NYC
         layer = pdk.Layer("ArcLayer", data=data, get_width=5, get_source_position="source", get_target_position="target", get_source_color="color", get_target_color="color")
@@ -377,24 +379,25 @@ if check_password():
         st.dataframe(pd.DataFrame({"Vessel": ["Ever Given", "Maersk Alabama"], "Dest": ["NYC", "Hamburg"], "ETA": ["4 Days", "12 Days"], "Status": ["On Time", "Delayed"]}), use_container_width=True)
 
     # 8. UTILS
-    elif menu == "DEAL BREAKER":
-        st.markdown("## 💰 MARGIN CALCULATOR")
+    elif menu == "COSTING":
+        st.markdown("## 💰 COSTING CALCULATOR")
         p = st.number_input("Price", 4.50)
         st.metric("Margin", f"${p - (yarn_cost+0.75):.2f}")
         if st.button("Save"): db_log_deal("Test", 0, p, 0, 0); st.success("Saved")
 
-    elif menu == "LEDGER":
+    elif menu == "DATABASE":
+        st.markdown("## 🗄️ ORDER HISTORY")
         st.dataframe(db_fetch_table("deals"), use_container_width=True)
 
-    # 9. ACADEMY (NEW TAB)
-    elif menu == "ACADEMY":
-        st.markdown("## 🎓 ROTex ACADEMY")
+    # 9. SYSTEM GUIDE (Formerly Academy)
+    elif menu == "SYSTEM GUIDE":
+        st.markdown("## 🎓 ROTex SYSTEM GUIDE")
         st.write("System Manual & Tactical Guides")
         
-        guide1, guide2, guide3 = st.tabs(["Command Center", "War Games Logic", "Alien Tech"])
+        guide1, guide2, guide3 = st.tabs(["Command Center", "Pricing Logic", "R&D Tech"])
         
         with guide1:
-            st.info("The Global Command Center aggregates live financial data to give you the 'True Cost' of production.")
+            st.info("The Market Intelligence unit aggregates live financial data to give you the 'True Cost' of production.")
             st.graphviz_chart('''
             digraph G {
                 rankdir=LR;
@@ -410,10 +413,10 @@ if check_password():
             ''')
             
         with guide2:
-            st.info("War Games uses 'Geopolitical Arbitrage'. It calculates the theoretical minimum price a competitor can offer based on their local advantages (e.g., Vietnam's lower logistics cost).")
+            st.info("Competitor Pricing uses 'Geopolitical Arbitrage'. It calculates the theoretical minimum price a competitor can offer based on their local advantages (e.g., Vietnam's lower logistics cost).")
             st.markdown("- **China:** High volume subsidy (-6%)")
             st.markdown("- **India:** Domestic cotton subsidy (-4%)")
             
         with guide3:
-            st.info("Alien Tech modules use advanced simulation to mimic hardware sensors.")
+            st.info("R&D modules use advanced simulation to mimic hardware sensors.")
             st.code("FFT Analysis = Audio Frequency Decoding")
