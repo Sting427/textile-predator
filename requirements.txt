@@ -11,3 +11,5 @@ pydeck
 streamlit-lottie
 fpdf
 matplotlib
+scipy
+qrcode
