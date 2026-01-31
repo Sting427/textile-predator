@@ -38,7 +38,9 @@ st.markdown("""
     
     /* NEON CARDS */
     div[data-testid="metric-container"] { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); padding: 15px; border-radius: 12px; border-left: 4px solid #00d2ff; margin-bottom: 10px; }
-    
+    .info-card { background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.05); }
+    .job-card { background: rgba(0, 255, 136, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(0, 255, 136, 0.1); border-left: 4px solid #00ff88; }
+
     /* SKUNKWORKS SPECIAL */
     .skunk-card { background: rgba(138, 43, 226, 0.1); border: 1px solid #8a2be2; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 0 20px rgba(138, 43, 226, 0.2); }
     .skunk-title { color: #d68bfb; font-family: 'Rajdhani'; font-weight: 800; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
@@ -49,6 +51,8 @@ st.markdown("""
     .tex-magenta { color: #ff0055; text-shadow: 0 0 25px rgba(255, 0, 85, 0.6); }
     
     .login-box { background: rgba(14, 17, 23, 0.9); border: 1px solid #333; padding: 40px; border-radius: 15px; text-align: center; border-top: 2px solid #00d2ff; border-bottom: 2px solid #ff0055; max-width: 500px; margin: auto; }
+    .iot-alert { background-color: rgba(255, 0, 85, 0.1); border: 1px solid #ff0055; color: #ff0055; padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; margin-bottom: 10px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 0, 85, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); } }
     
     @media only screen and (max-width: 600px) {
         .rotex-text { font-size: 40px !important; }
@@ -145,15 +149,12 @@ def generate_qr(data):
     return img
 
 def generate_noise_pattern():
-    # Generates a random "Textile Pattern" using NumPy noise
     w, h = 300, 300
     x = np.linspace(0, 10, w)
     y = np.linspace(0, 10, h)
     X, Y = np.meshgrid(x, y)
     Z = np.sin(X + random.random()*5) * np.cos(Y + random.random()*5)
-    # Map to 0-255
     Z_norm = cv2.normalize(Z, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-    # Color map
     Z_color = cv2.applyColorMap(Z_norm, cv2.COLORMAP_JET)
     return Z_color
 
@@ -179,26 +180,25 @@ if check_password():
         fig = go.Figure(); fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], line=dict(color='#00d2ff', width=3)))
         fig.update_layout(height=350, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=20,b=20))
         st.plotly_chart(fig, use_container_width=True)
+        
+        # --- 🚨 RESTORED NEWS FEED ---
+        st.markdown("### 🚨 INTEL FEED")
+        for item in get_news_stealth(): 
+            st.markdown(f'<div class="info-card"><a href="{item.link}" target="_blank">➤ {item.title}</a></div>', unsafe_allow_html=True)
 
     # --- 👽 SKUNKWORKS (EXTREME FEATURES) ---
     elif menu == "SKUNKWORKS (R&D)":
         st.markdown("## 👽 FUTURE TECH DIVISION")
-        
         tab_fut1, tab_fut2, tab_fut3 = st.tabs(["🔊 LOOM WHISPERER", "🧬 DIGITAL PASSPORT", "🎨 ALGO-WEAVER"])
         
-        # 1. AUDIO DIAGNOSTICS
         with tab_fut1:
             st.markdown('<div class="skunk-card"><div class="skunk-title">ACOUSTIC MACHINE DIAGNOSTICS</div><p>Fast Fourier Transform (FFT) analysis of motor frequencies.</p></div>', unsafe_allow_html=True)
-            uploaded_audio = st.file_uploader("UPLOAD MACHINE SOUND (.wav)", type=["wav"])
-            
-            if st.button("RUN SIMULATION (NO AUDIO FILE)"):
+            if st.button("RUN SIMULATION"):
                 st.write("Simulating Motor Sound Waveform...")
-                # Generate fake sound wave
                 fs = 10e3; N = 1e5; amp = 2*np.sqrt(2); freq = 1234.0; noise_power = 0.001 * fs / 2
                 time_s = np.arange(N) / fs
                 x = amp*np.sin(2*np.pi*freq*time_s) + np.random.normal(scale=np.sqrt(noise_power), size=time_s.shape)
                 f, t, Sxx = signal.spectrogram(x, fs)
-                
                 fig, ax = plt.subplots(figsize=(10, 4))
                 ax.pcolormesh(t, f, Sxx, shading='gouraud', cmap='inferno')
                 ax.set_ylabel('Frequency [Hz]'); ax.set_xlabel('Time [sec]')
@@ -206,31 +206,24 @@ if check_password():
                 st.pyplot(fig)
                 st.error("⚠️ ANOMALY DETECTED: High Frequency Harmonic at 1.2kHz (Bearing Wear)")
 
-        # 2. DIGITAL PASSPORT (BLOCKCHAIN)
         with tab_fut2:
             st.markdown('<div class="skunk-card"><div class="skunk-title">DIGITAL PRODUCT PASSPORT</div><p>Blockchain Traceability & QR Generation</p></div>', unsafe_allow_html=True)
             lot_id = st.text_input("ENTER LOT ID", "LOT-2024-TX-99")
             origin = st.selectbox("ORIGIN", ["Texas, USA", "Gujarat, India", "Xinjiang, CN"])
-            
             if st.button("MINT PASSPORT", use_container_width=True):
-                # Fake Blockchain Hash
                 token = f"{lot_id}-{origin}-{random.randint(1000,9999)}".encode('utf-8')
                 import hashlib
                 hash_object = hashlib.sha256(token)
                 hex_dig = hash_object.hexdigest()
-                
                 c1, c2 = st.columns([2, 1])
                 with c1:
                     st.code(f"BLOCKCHAIN HASH:\n{hex_dig}", language="json")
                     st.success("✅ IMMUTABLE RECORD CREATED")
                 with c2:
                     qr_img = generate_qr(f"ROTex VERIFIED | ID: {lot_id} | HASH: {hex_dig[:10]}...")
-                    # Convert to bytes for display
-                    buf = BytesIO()
-                    qr_img.save(buf)
+                    buf = BytesIO(); qr_img.save(buf)
                     st.image(buf, caption="TRACEABILITY QR", use_column_width=True)
 
-        # 3. GENERATIVE DESIGN
         with tab_fut3:
             st.markdown('<div class="skunk-card"><div class="skunk-title">ALGORITHMIC GENERATIVE DESIGN</div><p>Procedural Pattern Generation using Math (No AI Key Required)</p></div>', unsafe_allow_html=True)
             if st.button("GENERATE NEW PATTERN", use_container_width=True):
