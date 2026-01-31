@@ -13,3 +13,4 @@ fpdf
 matplotlib
 scipy
 qrcode
+graphviz
