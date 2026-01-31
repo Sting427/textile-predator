@@ -20,7 +20,7 @@ from scipy import signal
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="ROTex // VISIONARY",
+    page_title="ROTex // PREDATOR",
     layout="wide",
     page_icon="💠",
     initial_sidebar_state="collapsed"
@@ -36,12 +36,14 @@ st.markdown("""
     
     section[data-testid="stSidebar"] { background-color: rgba(0, 0, 0, 0.9); border-right: 1px solid #333; backdrop-filter: blur(15px); }
     
-    /* NEON CARDS */
     div[data-testid="metric-container"] { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); padding: 15px; border-radius: 12px; border-left: 4px solid #00d2ff; margin-bottom: 10px; }
     .info-card { background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.05); }
     .job-card { background: rgba(0, 255, 136, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(0, 255, 136, 0.1); border-left: 4px solid #00ff88; }
-
-    /* SKUNKWORKS SPECIAL */
+    
+    /* SNIPER TARGET CARDS */
+    .target-card { background: rgba(255, 0, 0, 0.1); border: 1px solid #ff0000; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
+    .target-safe { background: rgba(0, 255, 0, 0.1); border: 1px solid #00ff00; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
+    
     .skunk-card { background: rgba(138, 43, 226, 0.1); border: 1px solid #8a2be2; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 0 20px rgba(138, 43, 226, 0.2); }
     .skunk-title { color: #d68bfb; font-family: 'Rajdhani'; font-weight: 800; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
     
@@ -161,8 +163,8 @@ def generate_noise_pattern():
 # --- 🚀 LAUNCH ---
 if check_password():
     with st.sidebar:
-        st.markdown('<div class="rotex-logo-container"><span class="rotex-text ro-cyan" style="font-size: 36px;">RO</span><span class="rotex-text tex-magenta" style="font-size: 36px;">Tex</span><br><div class="rotex-tagline">VISIONARY EDITION</div></div>', unsafe_allow_html=True)
-        menu = st.radio("MODULES", ["WAR ROOM", "SKUNKWORKS (R&D)", "LABORATORY", "FACTORY IoT", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "DATABASE"])
+        st.markdown('<div class="rotex-logo-container"><span class="rotex-text ro-cyan" style="font-size: 36px;">RO</span><span class="rotex-text tex-magenta" style="font-size: 36px;">Tex</span><br><div class="rotex-tagline">PREDATOR EDITION</div></div>', unsafe_allow_html=True)
+        menu = st.radio("MODULES", ["WAR ROOM", "TARGET LOCK", "SKUNKWORKS (R&D)", "LABORATORY", "FACTORY IoT", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "DATABASE"])
         st.divider()
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
 
@@ -180,13 +182,60 @@ if check_password():
         fig = go.Figure(); fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], line=dict(color='#00d2ff', width=3)))
         fig.update_layout(height=350, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=20,b=20))
         st.plotly_chart(fig, use_container_width=True)
-        
-        # --- 🚨 RESTORED NEWS FEED ---
         st.markdown("### 🚨 INTEL FEED")
         for item in get_news_stealth(): 
             st.markdown(f'<div class="info-card"><a href="{item.link}" target="_blank">➤ {item.title}</a></div>', unsafe_allow_html=True)
 
-    # --- 👽 SKUNKWORKS (EXTREME FEATURES) ---
+    # --- 🎯 TARGET LOCK (COMPETITIVE INTEL) ---
+    elif menu == "TARGET LOCK":
+        st.markdown("## 🎯 GLOBAL PRICE SNIPER")
+        st.write("Real-time competitor simulation based on labor & raw material arbitrage.")
+        
+        col_in, col_res = st.columns([1, 2])
+        
+        with col_in:
+            st.markdown("### ⚙️ PARAMETERS")
+            fabric = st.selectbox("FABRIC TYPE", ["100% Cotton Single Jersey", "CVC Fleece", "Polyester Sport Mesh"])
+            my_price = st.number_input("YOUR QUOTE ($/kg)", value=4.50, step=0.05)
+            
+        with col_res:
+            st.markdown("### 🌏 RIVAL ANALYSIS")
+            
+            # Simulated Intelligence Logic
+            base_price = yarn_cost + 0.50 # Base manufacturing cost
+            china_p = base_price * 0.94 # High efficiency subsidy
+            india_p = base_price * 0.96 # Domestic cotton advantage
+            vietnam_p = base_price * 0.98 # Trade deal advantage
+            
+            # Display Cards
+            c1, c2, c3 = st.columns(3)
+            
+            # China Logic
+            delta_cn = my_price - china_p
+            color_cn = "target-card" if delta_cn > 0 else "target-safe"
+            icon_cn = "⚠️ LOSING" if delta_cn > 0 else "✅ WINNING"
+            c1.markdown(f'<div class="{color_cn}"><b>🇨🇳 CHINA</b><br>Target: ${china_p:.2f}<br>{icon_cn}</div>', unsafe_allow_html=True)
+            
+            # India Logic
+            delta_in = my_price - india_p
+            color_in = "target-card" if delta_in > 0 else "target-safe"
+            icon_in = "⚠️ LOSING" if delta_in > 0 else "✅ WINNING"
+            c2.markdown(f'<div class="{color_in}"><b>🇮🇳 INDIA</b><br>Target: ${india_p:.2f}<br>{icon_in}</div>', unsafe_allow_html=True)
+
+            # Vietnam Logic
+            delta_vn = my_price - vietnam_p
+            color_vn = "target-card" if delta_vn > 0 else "target-safe"
+            icon_vn = "⚠️ LOSING" if delta_vn > 0 else "✅ WINNING"
+            c3.markdown(f'<div class="{color_vn}"><b>🇻🇳 VIETNAM</b><br>Target: ${vietnam_p:.2f}<br>{icon_vn}</div>', unsafe_allow_html=True)
+            
+            # Strategic Advice
+            st.divider()
+            if my_price > min(china_p, india_p, vietnam_p):
+                target_cut = my_price - min(china_p, india_p, vietnam_p)
+                st.error(f"🚨 TACTICAL ALERT: You are overpriced by ${target_cut:.2f}/kg against the lowest bidder. Suggest negotiating shipping terms or lowering margin.")
+            else:
+                st.success("🛡️ MARKET DOMINANCE: Your price is competitive. Hold your ground.")
+
     elif menu == "SKUNKWORKS (R&D)":
         st.markdown("## 👽 FUTURE TECH DIVISION")
         tab_fut1, tab_fut2, tab_fut3 = st.tabs(["🔊 LOOM WHISPERER", "🧬 DIGITAL PASSPORT", "🎨 ALGO-WEAVER"])
