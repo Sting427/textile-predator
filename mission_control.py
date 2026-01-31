@@ -17,7 +17,13 @@ from datetime import datetime, timedelta
 import qrcode
 from io import BytesIO
 from scipy import signal
-import graphviz
+
+# --- 🛡️ SAFE IMPORT FOR GRAPHVIZ ---
+try:
+    import graphviz
+    graphviz_installed = True
+except ImportError:
+    graphviz_installed = False
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
@@ -112,7 +118,7 @@ def check_password():
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System v26.2</div></div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System v26.3</div></div></div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2: st.text_input("IDENTITY VERIFICATION", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Key...")
         return False
@@ -153,18 +159,38 @@ def process_fabric_image(image_file):
             count += 1
     return output_img, count
 
+# --- 🛡️ TEXT SCRUBBER (Fixes Unicode Error) ---
+def sanitize_text(text):
+    """Removes special characters that crash the PDF generator."""
+    if not text: return ""
+    # Encode to ASCII and ignore errors, then decode back to string
+    return text.encode('latin-1', 'replace').decode('latin-1')
+
 def create_pdf_report(yarn, cotton, gas, news, df_hist):
     plt.figure(figsize=(10, 4)); plt.plot(df_hist.index, df_hist['Yarn_Fair_Value'], color='#00d2ff'); plt.savefig('temp.png'); plt.close()
-    pdf = FPDF(); pdf.add_page(); pdf.set_font("Arial", "B", 24); pdf.cell(0, 20, "ROTex EXECUTIVE REPORT", ln=True, align="C")
-    pdf.set_font("Arial", "", 12); pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d')}", ln=True, align="C")
+    
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 24)
+    pdf.cell(0, 20, "ROTex EXECUTIVE REPORT", ln=True, align="C")
+    
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d')}", ln=True, align="C")
     pdf.ln(10)
+    
     pdf.cell(0, 10, f"Yarn Index: ${yarn:.2f} | Cotton: ${cotton:.2f} | Gas: ${gas:.2f}", ln=True)
     pdf.image('temp.png', x=10, w=190)
     pdf.ln(10)
-    pdf.set_font("Arial", "B", 14); pdf.cell(0, 10, "Market Intel:", ln=True)
+    
+    pdf.set_font("Arial", "B", 14)
+    pdf.cell(0, 10, "Market Intel:", ln=True)
+    
     pdf.set_font("Arial", "", 10)
     for item in news:
-        pdf.multi_cell(0, 10, f"- {item.title}")
+        # 🛡️ USE SANITIZED TEXT TO PREVENT CRASH
+        safe_title = sanitize_text(item.title)
+        pdf.multi_cell(0, 10, f"- {safe_title}")
+        
     return pdf.output(dest='S').encode('latin-1')
 
 def generate_qr(data):
@@ -203,7 +229,7 @@ if check_password():
         st.markdown(f"<div style='background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; white-space:nowrap; overflow:hidden; color:#00ff88; font-family:monospace;'>LIVE FEED: COTTON: ${df['Cotton_USD'].iloc[-1]:.2f} ▲ | GAS: ${df['Gas_USD'].iloc[-1]:.2f} ▼ | YARN FAIR VALUE: ${yarn_cost:.2f} ▲</div>", unsafe_allow_html=True)
         st.write("")
 
-        # REPORT GENERATOR RESTORED
+        # REPORT GENERATOR
         news_items = get_news_stealth()
         col_metrics, col_btn = st.columns([3, 1])
         with col_metrics:
@@ -266,7 +292,22 @@ if check_password():
             shock = st.slider("Global Price Shock (%)", -20, 20, 0)
             
             with st.expander("❓ HOW IT WORKS"):
-                st.write("This engine calculates the 'Strike Price' of rival nations by adjusting live cotton indices with local labor/energy subsidies.")
+                st.write("Calculates 'Strike Price' of rival nations using live indices + local labor/energy subsidies.")
+                if graphviz_installed:
+                    st.graphviz_chart('''
+                    digraph logic {
+                        rankdir=LR;
+                        node [shape=box, style=filled, fillcolor="#222", fontcolor="white", fontname="Arial"];
+                        edge [color="#00d2ff"];
+                        A [label="Live Yarn"];
+                        B [label="Subsidy"];
+                        C [label="Strike Price"];
+                        A -> C;
+                        B -> C;
+                    }
+                    ''')
+                else:
+                    st.warning("Diagram unavailable (Server missing Graphviz)")
 
         with col_sim:
             base = yarn_cost * (1 + shock/100)
@@ -283,7 +324,7 @@ if check_password():
             c2.metric("🇮🇳 India", f"${india:.2f}")
             c3.metric("🇻🇳 Vietnam", f"${vietnam:.2f}")
             
-            st.success(f"**AI Analysis:** You have a {prob}% chance of winning this deal. Ensure your lead time is under 45 days to compete with Vietnam.")
+            st.success(f"**AI Analysis:** You have a {prob}% chance of winning this deal.")
 
     # 3. R&D INNOVATION
     elif menu == "R&D INNOVATION":
@@ -295,18 +336,18 @@ if check_password():
                 fig = go.Figure(data=[go.Surface(z=Z, colorscale='Viridis')])
                 fig.update_layout(autosize=False, width=500, height=500, margin=dict(l=0, r=0, b=0, t=0), paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True)
-                st.success("**Diagnostic Complete:** Motor harmonic signatures are within green tolerances (ISO 10816).")
+                st.success("**Diagnostic Complete:** Motor harmonic signatures within ISO 10816.")
         with tab2:
             c1, c2 = st.columns(2)
             freq = c1.slider("Pattern Frequency", 1, 20, 10)
             chaos = c2.slider("Chaos Factor", 1, 10, 5)
             if st.button("GENERATE"):
                 st.image(generate_noise_pattern(freq, chaos), use_column_width=True, channels="BGR")
-                st.success("Unique Pattern ID Generated. Ready for CAD export.")
+                st.success("Unique Pattern ID Generated.")
         with tab3:
             st.info("System Operational. Minting active.")
 
-    # 4. QUALITY LAB (UPDATED WITH SHRINKAGE LOGIC)
+    # 4. QUALITY LAB
     elif menu == "QUALITY LAB":
         st.markdown("## 🧪 QUALITY CONTROL LAB")
         test = st.selectbox("Select Protocol", ["GSM Calc", "Shrinkage Sim", "AQL Inspector"])
@@ -318,16 +359,15 @@ if check_password():
             if st.button("CALCULATE GSM"):
                 res = w * 100 if a == "100 cm²" else w * 16
                 st.metric("RESULT", f"{res:.1f} g/m²")
-                if res < 140: st.warning("Comment: Fabric is very lightweight (Sheer). Check opacity.")
-                elif res > 180: st.success("Comment: Good weight for T-Shirts.")
-                else: st.info("Comment: Standard Single Jersey weight.")
+                if res < 140: st.warning("Comment: Lightweight (Sheer).")
+                elif res > 180: st.success("Comment: Good T-Shirt weight.")
+                else: st.info("Comment: Standard Single Jersey.")
                 
         elif test == "Shrinkage Sim":
-            st.write("### 📏 Dimensional Stability Test")
+            st.write("### 📏 Dimensional Stability")
             c1, c2 = st.columns(2)
             l_b = c1.number_input("Length Before (cm)", 50.0)
             l_a = c2.number_input("Length After (cm)", 48.0)
-            
             c3, c4 = st.columns(2)
             w_b = c3.number_input("Width Before (cm)", 50.0)
             w_a = c4.number_input("Width After (cm)", 49.0)
@@ -335,15 +375,11 @@ if check_password():
             if st.button("CALCULATE SHRINKAGE"):
                 shrink_l = ((l_b - l_a) / l_b) * 100
                 shrink_w = ((w_b - w_a) / w_b) * 100
-                
                 col_res1, col_res2 = st.columns(2)
                 col_res1.metric("Length Shrinkage", f"-{shrink_l:.1f}%")
                 col_res2.metric("Width Shrinkage", f"-{shrink_w:.1f}%")
-                
-                if shrink_l > 5.0 or shrink_w > 5.0:
-                    st.error("❌ FAILED: Shrinkage exceeds 5% tolerance. Adjustment required in Compacting.")
-                else:
-                    st.success("✅ PASSED: Fabric is stable within ISO standards.")
+                if shrink_l > 5.0 or shrink_w > 5.0: st.error("❌ FAILED: Exceeds 5% tolerance.")
+                else: st.success("✅ PASSED: Within ISO standards.")
                     
         elif test == "AQL Inspector":
             qty = st.number_input("Lot Qty", 5000)
@@ -368,8 +404,8 @@ if check_password():
         if up:
             img, cnt = process_fabric_image(up)
             st.image(img, caption=f"Neural Net Detected: {cnt} Anomalies", use_column_width=True)
-            if cnt > 0: st.error("⚠️ QUALITY THRESHOLD BREACHED: Multiple weaving faults detected.")
-            else: st.success("✅ GRADE A CERTIFIED: Clean weave structure.")
+            if cnt > 0: st.error("⚠️ QUALITY THRESHOLD BREACHED")
+            else: st.success("✅ GRADE A CERTIFIED")
 
     # 7. LOGISTICS
     elif menu == "LOGISTICS":
@@ -385,8 +421,8 @@ if check_password():
         p = st.number_input("Price", 4.50)
         margin = p - (yarn_cost+0.75)
         st.metric("Margin", f"${margin:.2f}/kg")
-        if margin < 0.20: st.error("Comment: Margin too low. Risk of loss.")
-        elif margin > 1.00: st.success("Comment: Excellent margin. High profit potential.")
+        if margin < 0.20: st.error("Comment: Margin too low.")
+        elif margin > 1.00: st.success("Comment: Excellent margin.")
         else: st.warning("Comment: Standard industry margin.")
         if st.button("Save"): db_log_deal("Test", 0, p, 0, 0); st.success("Saved")
 
@@ -399,7 +435,10 @@ if check_password():
         st.markdown("## 🎓 ROTex SYSTEM GUIDE")
         guide1, guide2 = st.tabs(["Command Center", "Pricing Logic"])
         with guide1:
-            st.info("The Market Intelligence unit aggregates live financial data to give you the 'True Cost' of production.")
-            st.graphviz_chart('digraph G { rankdir=LR; node [shape=box]; A -> B; }')
+            st.info("Market Intelligence aggregates live financial data.")
+            if graphviz_installed:
+                st.graphviz_chart('digraph G { rankdir=LR; node [shape=box]; A[label="Data"] -> B[label="Intel"]; }')
+            else:
+                st.warning("Diagram unavailable.")
         with guide2:
             st.info("Competitor Pricing uses 'Geopolitical Arbitrage'.")
