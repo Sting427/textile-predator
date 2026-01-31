@@ -20,7 +20,7 @@ from scipy import signal
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="ROTex // PREDATOR",
+    page_title="ROTex // PREDATOR v22.1",
     layout="wide",
     page_icon="💠",
     initial_sidebar_state="collapsed"
@@ -38,7 +38,6 @@ st.markdown("""
     
     div[data-testid="metric-container"] { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); padding: 15px; border-radius: 12px; border-left: 4px solid #00d2ff; margin-bottom: 10px; }
     .info-card { background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.05); }
-    .job-card { background: rgba(0, 255, 136, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(0, 255, 136, 0.1); border-left: 4px solid #00ff88; }
     
     /* SNIPER TARGET CARDS */
     .target-card { background: rgba(255, 0, 0, 0.1); border: 1px solid #ff0000; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
@@ -54,7 +53,6 @@ st.markdown("""
     
     .login-box { background: rgba(14, 17, 23, 0.9); border: 1px solid #333; padding: 40px; border-radius: 15px; text-align: center; border-top: 2px solid #00d2ff; border-bottom: 2px solid #ff0055; max-width: 500px; margin: auto; }
     .iot-alert { background-color: rgba(255, 0, 85, 0.1); border: 1px solid #ff0055; color: #ff0055; padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; margin-bottom: 10px; animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 0, 85, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); } }
     
     @media only screen and (max-width: 600px) {
         .rotex-text { font-size: 40px !important; }
@@ -163,7 +161,7 @@ def generate_noise_pattern():
 # --- 🚀 LAUNCH ---
 if check_password():
     with st.sidebar:
-        st.markdown('<div class="rotex-logo-container"><span class="rotex-text ro-cyan" style="font-size: 36px;">RO</span><span class="rotex-text tex-magenta" style="font-size: 36px;">Tex</span><br><div class="rotex-tagline">PREDATOR EDITION</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="rotex-logo-container"><span class="rotex-text ro-cyan" style="font-size: 36px;">RO</span><span class="rotex-text tex-magenta" style="font-size: 36px;">Tex</span><br><div class="rotex-tagline">PREDATOR v22.1</div></div>', unsafe_allow_html=True)
         menu = st.radio("MODULES", ["WAR ROOM", "TARGET LOCK", "SKUNKWORKS (R&D)", "LABORATORY", "FACTORY IoT", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "DATABASE"])
         st.divider()
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
@@ -201,11 +199,23 @@ if check_password():
         with col_res:
             st.markdown("### 🌏 RIVAL ANALYSIS")
             
-            # Simulated Intelligence Logic
-            base_price = yarn_cost + 0.50 # Base manufacturing cost
-            china_p = base_price * 0.94 # High efficiency subsidy
-            india_p = base_price * 0.96 # Domestic cotton advantage
-            vietnam_p = base_price * 0.98 # Trade deal advantage
+            # --- 🛠️ BUG FIX: DYNAMIC PRICING LOGIC ---
+            if fabric == "100% Cotton Single Jersey":
+                raw_material_factor = 1.0 # Standard
+                processing_add = 0.50
+            elif fabric == "CVC Fleece":
+                raw_material_factor = 0.90 # CVC is cheaper yarn
+                processing_add = 0.90 # But expensive knitting (heavier)
+            elif fabric == "Polyester Sport Mesh":
+                raw_material_factor = 0.60 # Poly is much cheaper
+                processing_add = 0.40 # Easy to knit
+            
+            # Calculate Base for chosen fabric
+            base_price = (yarn_cost * raw_material_factor) + processing_add
+            
+            china_p = base_price * 0.94 # China Subsidy
+            india_p = base_price * 0.96 # India Cotton Advantage
+            vietnam_p = base_price * 0.98 # Vietnam Trade Deal
             
             # Display Cards
             c1, c2, c3 = st.columns(3)
@@ -230,11 +240,12 @@ if check_password():
             
             # Strategic Advice
             st.divider()
-            if my_price > min(china_p, india_p, vietnam_p):
-                target_cut = my_price - min(china_p, india_p, vietnam_p)
-                st.error(f"🚨 TACTICAL ALERT: You are overpriced by ${target_cut:.2f}/kg against the lowest bidder. Suggest negotiating shipping terms or lowering margin.")
+            lowest_rival = min(china_p, india_p, vietnam_p)
+            if my_price > lowest_rival:
+                target_cut = my_price - lowest_rival
+                st.error(f"🚨 TACTICAL ALERT: You are overpriced by ${target_cut:.2f}/kg against the lowest bidder ({fabric}).")
             else:
-                st.success("🛡️ MARKET DOMINANCE: Your price is competitive. Hold your ground.")
+                st.success(f"🛡️ MARKET DOMINANCE: Your price is competitive for {fabric}.")
 
     elif menu == "SKUNKWORKS (R&D)":
         st.markdown("## 👽 FUTURE TECH DIVISION")
