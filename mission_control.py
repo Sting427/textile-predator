@@ -20,106 +20,117 @@ from scipy import signal
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="ROTex // ONYX",
+    page_title="ROTex // KINETIC",
     layout="wide",
     page_icon="💠",
     initial_sidebar_state="collapsed"
 )
 
-# --- 🎨 THE "ONYX GLASS" THEME (WEBFLOW STYLE) ---
+# --- 🎨 THE "KINETIC ELITE" THEME (WEBFLOW MOTION) ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Rajdhani:wght@500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Rajdhani:wght@500;700;800&display=swap');
     
-    /* 1. THE LIVING BACKGROUND */
+    /* 1. THE LIQUID VOID BACKGROUND (Animated) */
+    @keyframes liquid {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
     .stApp {
-        background: radial-gradient(circle at 0% 0%, #1a1a2e 0%, #16213e 50%, #000000 100%);
-        background-attachment: fixed;
-        color: #ffffff;
+        background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #000000);
+        background-size: 400% 400%;
+        animation: liquid 15s ease infinite;
+        color: #e0e0e0;
         font-family: 'Inter', sans-serif;
     }
     
-    /* 2. SIDEBAR GLASS */
-    section[data-testid="stSidebar"] {
-        background: rgba(10, 10, 15, 0.7);
-        backdrop-filter: blur(20px);
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    /* 2. ENTRANCE ANIMATION (The "Fade Up" Effect) */
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     
-    /* 3. BENTO GRID CARDS (The Webflow Look) */
-    div[data-testid="metric-container"], .info-card, .job-card, .skunk-card, .target-card, .target-safe {
-        background: rgba(255, 255, 255, 0.03); /* Ultra subtle white tint */
-        backdrop-filter: blur(12px);            /* The Frost Effect */
-        border: 1px solid rgba(255, 255, 255, 0.08); /* Thin sleek border */
-        border-radius: 16px;                    /* Soft corners */
-        padding: 20px;
-        transition: all 0.3s ease;              /* Smooth animation */
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    }
-    
-    /* HOVER EFFECT (Lift) */
-    div[data-testid="metric-container"]:hover, .info-card:hover, .job-card:hover, .skunk-card:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(255, 255, 255, 0.2);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    }
-    
-    /* 4. TYPOGRAPHY UPDATES */
-    h1, h2, h3 {
-        font-family: 'Rajdhani', sans-serif;
-        font-weight: 700;
-        letter-spacing: 1px;
-        background: -webkit-linear-gradient(0deg, #ffffff, #a0a0a0);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    
-    /* 5. LOGO STYLING */
-    .rotex-logo-container { text-align: center; margin-bottom: 30px; }
-    .rotex-text { 
-        font-family: 'Rajdhani', sans-serif; 
-        font-weight: 800; 
-        letter-spacing: 6px; 
-        text-transform: uppercase; 
-        font-size: 42px;
-        background: linear-gradient(90deg, #00d2ff, #3a7bd5);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .rotex-tagline { 
-        font-family: 'Inter', sans-serif; 
-        font-size: 10px; 
-        letter-spacing: 3px; 
-        color: #666; 
-        margin-top: 5px; 
-        text-transform: uppercase;
+    /* Apply entrance to main containers */
+    .element-container, .stMarkdown, .stMetric {
+        animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
 
-    /* 6. SPECIFIC COMPONENT STYLES */
-    .skunk-title { color: #d68bfb; font-weight: 800; font-size: 18px; letter-spacing: 1px; margin-bottom: 5px; }
-    
-    /* Target Lock Specifics */
-    .target-card { border-left: 4px solid #ff4b4b !important; }
-    .target-safe { border-left: 4px solid #00d2ff !important; }
-    
-    /* Login Box */
-    .login-box { 
-        background: rgba(0, 0, 0, 0.6); 
-        backdrop-filter: blur(20px); 
-        border: 1px solid rgba(255,255,255,0.1); 
-        padding: 50px; 
-        border-radius: 24px; 
-        text-align: center; 
-        max-width: 450px; 
-        margin: auto; 
-        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    /* 3. GLASSMORPHISM CARDS (Interactive) */
+    div[data-testid="metric-container"], .info-card, .job-card, .skunk-card, .target-card, .target-safe {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy Elastic Feel */
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
     }
     
-    /* Mobile Adjustments */
+    /* The "Webflow Hover" State */
+    div[data-testid="metric-container"]:hover, .info-card:hover, .job-card:hover, .skunk-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); /* Deep shadow lift */
+    }
+    
+    /* 4. TEXT SHIMMER EFFECT (Premium Metallic) */
+    @keyframes shine {
+        0% { background-position: -200% center; }
+        100% { background-position: 200% center; }
+    }
+    
+    .rotex-text {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 800;
+        font-size: 48px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        background: linear-gradient(90deg, #00d2ff, #fff, #00d2ff);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shine 4s linear infinite;
+    }
+
+    /* 5. UI POLISH */
+    .rotex-tagline { 
+        font-size: 11px; letter-spacing: 4px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: -5px; 
+    }
+    
+    .target-card { border-left: 4px solid #ff4b4b !important; }
+    .target-safe { border-left: 4px solid #00ff88 !important; }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #000; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    /* Login Box Cinematic */
+    .login-box {
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(25px);
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 60px;
+        border-radius: 24px;
+        text-align: center;
+        max-width: 500px;
+        margin: auto;
+        box-shadow: 0 0 100px rgba(0, 210, 255, 0.15);
+        animation: fadeUp 1s ease-out;
+    }
+    
+    /* Mobile Override */
     @media only screen and (max-width: 600px) {
-        .rotex-text { font-size: 32px !important; }
-        .login-box { padding: 30px !important; width: 90% !important; margin-top: 20px !important; }
+        .rotex-text { font-size: 36px !important; }
+        .login-box { padding: 30px; width: 90%; }
+        div[data-testid="metric-container"] { margin-bottom: 12px; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -153,10 +164,10 @@ def check_password():
             del st.session_state["password"]
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Onyx System v23.0</div></div></div>', unsafe_allow_html=True)
+        st.markdown("<br><br><br>", unsafe_allow_html=True)
+        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Kinetic Elite v24.0</div></div></div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
-        with col2: st.text_input("ACCESS KEY", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Key...")
+        with col2: st.text_input("IDENTITY VERIFICATION", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Access Key...")
         return False
     return st.session_state["password_correct"]
 
@@ -222,7 +233,7 @@ def generate_noise_pattern():
 # --- 🚀 LAUNCH ---
 if check_password():
     with st.sidebar:
-        st.markdown('<div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Onyx Glass v23.0</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Kinetic Elite v24.0</div></div>', unsafe_allow_html=True)
         menu = st.radio("MODULES", ["WAR ROOM", "TARGET LOCK", "SKUNKWORKS (R&D)", "LABORATORY", "FACTORY IoT", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "DATABASE"])
         st.divider()
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
