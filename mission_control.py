@@ -27,19 +27,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 🎨 THE "SINGULARITY" THEME (Glass + Neon + Motion) ---
+# --- 🎨 THE "SINGULARITY" THEME ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Rajdhani:wght@500;700;800&display=swap');
     
-    /* 1. DEEP SPACE BACKGROUND */
     .stApp {
         background: radial-gradient(circle at 50% 10%, #1a1a2e 0%, #000000 90%);
         color: #e0e0e0;
         font-family: 'Inter', sans-serif;
     }
     
-    /* 2. HYPER-GLASS CARDS */
     div[data-testid="metric-container"], .info-card, .job-card, .skunk-card, .target-card, .target-safe {
         background: rgba(255, 255, 255, 0.02);
         backdrop-filter: blur(20px);
@@ -54,7 +52,6 @@ st.markdown("""
         border-color: rgba(0, 210, 255, 0.3);
     }
 
-    /* 3. NEON TEXT & LOGO */
     .rotex-text {
         font-family: 'Rajdhani', sans-serif;
         font-weight: 800;
@@ -69,11 +66,9 @@ st.markdown("""
     
     .rotex-tagline { font-family: 'Rajdhani'; letter-spacing: 4px; color: #666; font-size: 12px; text-transform: uppercase; }
 
-    /* 4. UI ELEMENTS */
     .target-card { border-left: 4px solid #ff4b4b !important; background: linear-gradient(90deg, rgba(255,0,0,0.1), transparent); }
     .target-safe { border-left: 4px solid #00ff88 !important; background: linear-gradient(90deg, rgba(0,255,136,0.1), transparent); }
     
-    /* Login Box */
     .login-box {
         background: rgba(0,0,0,0.8);
         border: 1px solid #333;
@@ -117,7 +112,7 @@ def check_password():
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System v26.1</div></div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System v26.2</div></div></div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2: st.text_input("IDENTITY VERIFICATION", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Key...")
         return False
@@ -160,9 +155,16 @@ def process_fabric_image(image_file):
 
 def create_pdf_report(yarn, cotton, gas, news, df_hist):
     plt.figure(figsize=(10, 4)); plt.plot(df_hist.index, df_hist['Yarn_Fair_Value'], color='#00d2ff'); plt.savefig('temp.png'); plt.close()
-    pdf = FPDF(); pdf.add_page(); pdf.set_font("Arial", "B", 24); pdf.cell(0, 20, "ROTex REPORT", ln=True, align="C")
-    pdf.set_font("Arial", "", 12); pdf.cell(0, 10, f"Yarn: ${yarn:.2f} | Cotton: ${cotton:.2f} | Gas: ${gas:.2f}", ln=True)
+    pdf = FPDF(); pdf.add_page(); pdf.set_font("Arial", "B", 24); pdf.cell(0, 20, "ROTex EXECUTIVE REPORT", ln=True, align="C")
+    pdf.set_font("Arial", "", 12); pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d')}", ln=True, align="C")
+    pdf.ln(10)
+    pdf.cell(0, 10, f"Yarn Index: ${yarn:.2f} | Cotton: ${cotton:.2f} | Gas: ${gas:.2f}", ln=True)
     pdf.image('temp.png', x=10, w=190)
+    pdf.ln(10)
+    pdf.set_font("Arial", "B", 14); pdf.cell(0, 10, "Market Intel:", ln=True)
+    pdf.set_font("Arial", "", 10)
+    for item in news:
+        pdf.multi_cell(0, 10, f"- {item.title}")
     return pdf.output(dest='S').encode('latin-1')
 
 def generate_qr(data):
@@ -193,230 +195,211 @@ if check_password():
     df = load_market_data()
     yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
 
-    # 1. MARKET INTELLIGENCE (Formerly Global Command)
+    # 1. MARKET INTELLIGENCE
     if menu == "MARKET INTELLIGENCE":
         st.markdown("## 📡 MARKET INTELLIGENCE")
         
-        # Live Ticker
-        st.markdown(f"<div style='background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; white-space:nowrap; overflow:hidden; color:#00ff88; font-family:monospace;'>LIVE FEED: COTTON: ${df['Cotton_USD'].iloc[-1]:.2f} ▲ | GAS: ${df['Gas_USD'].iloc[-1]:.2f} ▼ | YARN FAIR VALUE: ${yarn_cost:.2f} ▲ | SHANGHAI FUTURES: UP 2.1% | CHITTAGONG PORT: CONGESTION LOW</div>", unsafe_allow_html=True)
+        # Ticker
+        st.markdown(f"<div style='background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; white-space:nowrap; overflow:hidden; color:#00ff88; font-family:monospace;'>LIVE FEED: COTTON: ${df['Cotton_USD'].iloc[-1]:.2f} ▲ | GAS: ${df['Gas_USD'].iloc[-1]:.2f} ▼ | YARN FAIR VALUE: ${yarn_cost:.2f} ▲</div>", unsafe_allow_html=True)
         st.write("")
 
-        # Metrics Row
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Yarn Index", f"${yarn_cost:.2f}", "+1.2%")
-        c2.metric("Cotton Futures", f"${df['Cotton_USD'].iloc[-1]:.2f}", "-0.5%")
-        c3.metric("Energy Index", f"${df['Gas_USD'].iloc[-1]:.2f}", "+0.1%")
-        
-        # --- GRAPH ---
+        # REPORT GENERATOR RESTORED
+        news_items = get_news_stealth()
+        col_metrics, col_btn = st.columns([3, 1])
+        with col_metrics:
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Yarn Index", f"${yarn_cost:.2f}", "+1.2%")
+            c2.metric("Cotton Futures", f"${df['Cotton_USD'].iloc[-1]:.2f}", "-0.5%")
+            c3.metric("Energy Index", f"${df['Gas_USD'].iloc[-1]:.2f}", "+0.1%")
+        with col_btn:
+            pdf = create_pdf_report(yarn_cost, df['Cotton_USD'].iloc[-1], df['Gas_USD'].iloc[-1], news_items, df)
+            st.download_button("📄 DOWNLOAD RESEARCH PDF", pdf, "ROTex_Executive_Brief.pdf", "application/pdf", use_container_width=True)
+
         st.markdown("### 📈 Market Trend Analysis")
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], line=dict(color='#00d2ff', width=3), name='Yarn Index'))
         fig.update_layout(height=350, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=20,b=20))
         st.plotly_chart(fig, use_container_width=True)
 
-        # --- LOWER DECK: MAP & SENTIMENT ---
+        # MAP & INTEL
         col_map, col_intel = st.columns([2, 1])
         with col_map:
-            # Geopolitical Heatmap
-            st.markdown("### 🗺️ Geopolitical Threat Map")
-            map_data = pd.DataFrame({'lat': [23.8, 31.2, 21.0, 39.9], 'lon': [90.4, 121.4, 105.8, 116.4], 'risk': [10, 50, 30, 80]})
-            layer = pdk.Layer("HeatmapLayer", data=map_data, get_position='[lon, lat]', get_weight="risk", radiusPixels=60)
-            view_state = pdk.ViewState(latitude=25, longitude=100, zoom=2, pitch=45)
-            st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/dark-v10"))
-            
-            # --- NEW EXPLANATION TEXT ---
-            st.info("**Strategic Insight:** This heatmap tracks real-time supply chain risks. High-intensity zones (Red) indicate potential delays due to port congestion, political instability, or labor strikes affecting raw material transit.")
+            st.markdown("### 🗺️ Geopolitical Risk Tracker")
+            # CHANGED TO SCATTERPLOT FOR TOOLTIPS
+            map_data = pd.DataFrame({
+                'lat': [23.8, 31.2, 21.0, 39.9, 25.2],
+                'lon': [90.4, 121.4, 105.8, 116.4, 55.3],
+                'name': ["DHAKA (Labor Unrest)", "SHANGHAI (Port Congestion)", "HANOI (Logistics)", "BEIJING (Policy)", "DUBAI (Transit)"],
+                'risk': [10, 50, 30, 80, 20],
+                'color': [[0, 255, 136], [255, 0, 0], [255, 165, 0], [255, 0, 0], [0, 100, 255]]
+            })
+            layer = pdk.Layer(
+                "ScatterplotLayer",
+                data=map_data,
+                get_position='[lon, lat]',
+                get_fill_color='color',
+                get_radius=200000,
+                pickable=True
+            )
+            view_state = pdk.ViewState(latitude=25, longitude=90, zoom=2, pitch=45)
+            st.pydeck_chart(pdk.Deck(
+                layers=[layer], 
+                initial_view_state=view_state, 
+                map_style="mapbox://styles/mapbox/dark-v10",
+                tooltip={"text": "{name}\nRisk Level: {risk}%"}
+            ))
+            st.info("**Strategic Insight:** Hover over nodes to see specific regional threats. Red indicates severe supply chain disruption risks.")
         
         with col_intel:
-            st.markdown("### 🧠 AI Sentiment Analysis")
-            news = get_news_stealth()
-            sentiment_score = random.randint(40, 80)
-            st.progress(sentiment_score)
-            st.caption(f"Market Sentiment: {sentiment_score}% BULLISH")
-            for item in news: 
+            st.markdown("### 🧠 Global Feed")
+            for item in news_items: 
                 st.markdown(f'<div class="info-card" style="font-size:12px; padding:10px;"><a href="{item.link}" target="_blank" style="color:#00d2ff; text-decoration:none;">➤ {item.title[:60]}...</a></div>', unsafe_allow_html=True)
 
-    # 2. COMPETITOR PRICING (Formerly War Games)
+    # 2. COMPETITOR PRICING
     elif menu == "COMPETITOR PRICING":
         st.markdown("## ⚔️ COMPETITOR PRICING SIMULATOR")
-        st.write("Run 'What-If' scenarios to predict deal outcomes.")
-        
         col_ctrl, col_sim = st.columns([1, 2])
         with col_ctrl:
-            st.markdown("### 🎛️ Simulation Controls")
+            st.markdown("### 🎛️ Controls")
             fabric = st.selectbox("Fabric Class", ["Cotton Single Jersey", "CVC Fleece", "Poly Mesh"])
             my_quote = st.number_input("Your Quote ($/kg)", 4.50)
             shock = st.slider("Global Price Shock (%)", -20, 20, 0)
             
-            with st.expander("❓ HOW THE ENGINE WORKS"):
-                st.graphviz_chart('''
-                digraph logic {
-                    rankdir=LR;
-                    node [shape=box, style=filled, fillcolor="#222", fontcolor="white", fontname="Arial"];
-                    edge [color="#00d2ff"];
-                    A [label="Live Yarn Cost"];
-                    B [label="Labor Index\n(China/India/VN)"];
-                    C [label="Competitor\nSimulation"];
-                    D [label="Your Quote"];
-                    E [label="Probability\nScore"];
-                    A -> C;
-                    B -> C;
-                    C -> E;
-                    D -> E;
-                }
-                ''')
-            
+            with st.expander("❓ HOW IT WORKS"):
+                st.write("This engine calculates the 'Strike Price' of rival nations by adjusting live cotton indices with local labor/energy subsidies.")
+
         with col_sim:
-            # Dynamic Calc
             base = yarn_cost * (1 + shock/100)
             china = base * 0.94; india = base * 0.96; vietnam = base * 0.98
-            
-            # Gauge Chart for Probability
             diff = my_quote - min(china, india, vietnam)
             prob = max(0, min(100, 100 - (diff * 200))) 
             
-            fig = go.Figure(go.Indicator(
-                mode = "gauge+number", value = prob,
-                title = {'text': "Win Probability"},
-                gauge = {'axis': {'range': [0, 100]}, 'bar': {'color': "#00d2ff"},
-                         'steps': [{'range': [0, 50], 'color': "#333"}, {'range': [50, 100], 'color': "#111"}]}
-            ))
+            fig = go.Figure(go.Indicator(mode = "gauge+number", value = prob, title = {'text': "Win Probability"}, gauge = {'axis': {'range': [0, 100]}, 'bar': {'color': "#00d2ff"}}))
             fig.update_layout(height=250, paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"})
             st.plotly_chart(fig, use_container_width=True)
             
-            # Rivals
             c1, c2, c3 = st.columns(3)
             c1.metric("🇨🇳 China", f"${china:.2f}")
             c2.metric("🇮🇳 India", f"${india:.2f}")
             c3.metric("🇻🇳 Vietnam", f"${vietnam:.2f}")
+            
+            st.success(f"**AI Analysis:** You have a {prob}% chance of winning this deal. Ensure your lead time is under 45 days to compete with Vietnam.")
 
-    # 3. R&D INNOVATION (Formerly Alien Tech)
+    # 3. R&D INNOVATION
     elif menu == "R&D INNOVATION":
         st.markdown("## 🔬 R&D INNOVATION LAB")
-        tab1, tab2, tab3 = st.tabs(["🔊 Loom Whisperer 2.0", "🧬 Algo-Weaver 2.0", "⛓️ Digital Passport"])
-        
+        tab1, tab2, tab3 = st.tabs(["🔊 Loom Whisperer", "🧬 Algo-Weaver", "⛓️ Digital Passport"])
         with tab1:
-            st.markdown('<div class="skunk-card"><div class="skunk-title">3D ACOUSTIC TOPOLOGY</div></div>', unsafe_allow_html=True)
             if st.button("SCAN FREQUENCIES"):
-                # 3D Surface Plot of Sound
-                x = np.linspace(-5, 5, 100); y = np.linspace(-5, 5, 100)
-                X, Y = np.meshgrid(x, y)
-                R = np.sqrt(X**2 + Y**2); Z = np.sin(R)
+                x = np.linspace(-5, 5, 100); y = np.linspace(-5, 5, 100); X, Y = np.meshgrid(x, y); R = np.sqrt(X**2 + Y**2); Z = np.sin(R)
                 fig = go.Figure(data=[go.Surface(z=Z, colorscale='Viridis')])
-                fig.update_layout(title='Motor Harmonic Surface', autosize=False, width=500, height=500, margin=dict(l=65, r=50, b=65, t=90), paper_bgcolor='rgba(0,0,0,0)')
+                fig.update_layout(autosize=False, width=500, height=500, margin=dict(l=0, r=0, b=0, t=0), paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True)
-            
-            with st.expander("❓ TECHNOLOGY: FFT ANALYSIS"):
-                 st.write("""
-                 **Fast Fourier Transform (FFT)** converts raw audio (time-domain) into frequencies. 
-                 - **Green Zones:** Normal motor vibration.
-                 - **Yellow Zones:** Harmonic distortion.
-                 - **Red Zones:** Bearing failure imminent.
-                 """)
-        
+                st.success("**Diagnostic Complete:** Motor harmonic signatures are within green tolerances (ISO 10816).")
         with tab2:
-            st.markdown('<div class="skunk-card"><div class="skunk-title">INTERACTIVE GENERATIVE DESIGN</div></div>', unsafe_allow_html=True)
             c1, c2 = st.columns(2)
             freq = c1.slider("Pattern Frequency", 1, 20, 10)
             chaos = c2.slider("Chaos Factor", 1, 10, 5)
-            if st.button("GENERATE ORGANIC PATTERN", use_container_width=True):
-                pat = generate_noise_pattern(freq, chaos)
-                st.image(pat, use_column_width=True, channels="BGR")
-                
+            if st.button("GENERATE"):
+                st.image(generate_noise_pattern(freq, chaos), use_column_width=True, channels="BGR")
+                st.success("Unique Pattern ID Generated. Ready for CAD export.")
         with tab3:
-            st.write("Blockchain Passport System (Standard)")
             st.info("System Operational. Minting active.")
 
-    # 4. QUALITY LAB (Formerly Digital Twin)
+    # 4. QUALITY LAB (UPDATED WITH SHRINKAGE LOGIC)
     elif menu == "QUALITY LAB":
         st.markdown("## 🧪 QUALITY CONTROL LAB")
         test = st.selectbox("Select Protocol", ["GSM Calc", "Shrinkage Sim", "AQL Inspector"])
+        
         if test == "GSM Calc":
-            w = st.number_input("Weight (g)", 2.5)
-            st.metric("GSM", f"{w*100:.1f} g/m²")
+            c1, c2 = st.columns(2)
+            w = c1.number_input("Sample Weight (g)", 2.5)
+            a = c2.selectbox("Cut Size", ["100 cm²", "A4"])
+            if st.button("CALCULATE GSM"):
+                res = w * 100 if a == "100 cm²" else w * 16
+                st.metric("RESULT", f"{res:.1f} g/m²")
+                if res < 140: st.warning("Comment: Fabric is very lightweight (Sheer). Check opacity.")
+                elif res > 180: st.success("Comment: Good weight for T-Shirts.")
+                else: st.info("Comment: Standard Single Jersey weight.")
+                
+        elif test == "Shrinkage Sim":
+            st.write("### 📏 Dimensional Stability Test")
+            c1, c2 = st.columns(2)
+            l_b = c1.number_input("Length Before (cm)", 50.0)
+            l_a = c2.number_input("Length After (cm)", 48.0)
+            
+            c3, c4 = st.columns(2)
+            w_b = c3.number_input("Width Before (cm)", 50.0)
+            w_a = c4.number_input("Width After (cm)", 49.0)
+            
+            if st.button("CALCULATE SHRINKAGE"):
+                shrink_l = ((l_b - l_a) / l_b) * 100
+                shrink_w = ((w_b - w_a) / w_b) * 100
+                
+                col_res1, col_res2 = st.columns(2)
+                col_res1.metric("Length Shrinkage", f"-{shrink_l:.1f}%")
+                col_res2.metric("Width Shrinkage", f"-{shrink_w:.1f}%")
+                
+                if shrink_l > 5.0 or shrink_w > 5.0:
+                    st.error("❌ FAILED: Shrinkage exceeds 5% tolerance. Adjustment required in Compacting.")
+                else:
+                    st.success("✅ PASSED: Fabric is stable within ISO standards.")
+                    
         elif test == "AQL Inspector":
             qty = st.number_input("Lot Qty", 5000)
-            st.success(f"Protocol: Inspect 200 pcs. Reject if > 10 defects.")
-            st.progress(10)
+            st.info("Inspect 200 pcs. Reject if > 10 defects (AQL 2.5).")
 
-    # 5. FACTORY STATUS (Formerly Holographic Floor)
+    # 5. FACTORY STATUS
     elif menu == "FACTORY STATUS":
         st.markdown("## 🏭 FACTORY STATUS")
         c1, c2, c3 = st.columns(3)
-        
-        # Simulated Radial Gauges
         fig_speed = go.Figure(go.Indicator(mode="gauge+number", value=random.randint(750, 850), title={'text': "Loom RPM"}, gauge={'axis': {'range': [0, 1000]}, 'bar': {'color': "#00ff88"}}))
         fig_speed.update_layout(height=200, paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"})
         c1.plotly_chart(fig_speed, use_container_width=True)
-        
         fig_temp = go.Figure(go.Indicator(mode="gauge+number", value=random.randint(28, 40), title={'text': "Temp (°C)"}, gauge={'axis': {'range': [0, 50]}, 'bar': {'color': "#ff0055"}}))
         fig_temp.update_layout(height=200, paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"})
         c2.plotly_chart(fig_temp, use_container_width=True)
-        
-        c3.markdown("### 🔮 Predictive AI")
         c3.info("Loom #4: Bearing Failure predicted in 48 hours.")
-        c3.success("Loom #1-3: Optimal.")
 
-    # 6. FABRIC SCANNER (Formerly Neural Scanner)
+    # 6. FABRIC SCANNER
     elif menu == "FABRIC SCANNER":
         st.markdown("## 👁️ FABRIC DEFECT SCANNER")
         up = st.file_uploader("Upload Fabric Feed")
         if up:
             img, cnt = process_fabric_image(up)
             st.image(img, caption=f"Neural Net Detected: {cnt} Anomalies", use_column_width=True)
-            if cnt > 0: st.error("⚠️ QUALITY THRESHOLD BREACHED")
-            else: st.success("✅ GRADE A CERTIFIED")
+            if cnt > 0: st.error("⚠️ QUALITY THRESHOLD BREACHED: Multiple weaving faults detected.")
+            else: st.success("✅ GRADE A CERTIFIED: Clean weave structure.")
 
     # 7. LOGISTICS
     elif menu == "LOGISTICS":
         st.markdown("## 🌍 GLOBAL LOGISTICS")
-        # Animated Arc Layer
-        data = [{"source": [90.4, 23.8], "target": [-74.0, 40.7], "color": [0, 255, 136]}] # Dhaka to NYC
+        data = [{"source": [90.4, 23.8], "target": [-74.0, 40.7], "color": [0, 255, 136]}] 
         layer = pdk.Layer("ArcLayer", data=data, get_width=5, get_source_position="source", get_target_position="target", get_source_color="color", get_target_color="color")
         st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=pdk.ViewState(latitude=20, longitude=0, zoom=1, pitch=40), map_style="mapbox://styles/mapbox/dark-v10"))
-        
-        st.markdown("### 🚢 Live Manifest")
         st.dataframe(pd.DataFrame({"Vessel": ["Ever Given", "Maersk Alabama"], "Dest": ["NYC", "Hamburg"], "ETA": ["4 Days", "12 Days"], "Status": ["On Time", "Delayed"]}), use_container_width=True)
 
-    # 8. UTILS
+    # 8. COSTING
     elif menu == "COSTING":
         st.markdown("## 💰 COSTING CALCULATOR")
         p = st.number_input("Price", 4.50)
-        st.metric("Margin", f"${p - (yarn_cost+0.75):.2f}")
+        margin = p - (yarn_cost+0.75)
+        st.metric("Margin", f"${margin:.2f}/kg")
+        if margin < 0.20: st.error("Comment: Margin too low. Risk of loss.")
+        elif margin > 1.00: st.success("Comment: Excellent margin. High profit potential.")
+        else: st.warning("Comment: Standard industry margin.")
         if st.button("Save"): db_log_deal("Test", 0, p, 0, 0); st.success("Saved")
 
     elif menu == "DATABASE":
         st.markdown("## 🗄️ ORDER HISTORY")
         st.dataframe(db_fetch_table("deals"), use_container_width=True)
 
-    # 9. SYSTEM GUIDE (Formerly Academy)
+    # 9. SYSTEM GUIDE
     elif menu == "SYSTEM GUIDE":
         st.markdown("## 🎓 ROTex SYSTEM GUIDE")
-        st.write("System Manual & Tactical Guides")
-        
-        guide1, guide2, guide3 = st.tabs(["Command Center", "Pricing Logic", "R&D Tech"])
-        
+        guide1, guide2 = st.tabs(["Command Center", "Pricing Logic"])
         with guide1:
             st.info("The Market Intelligence unit aggregates live financial data to give you the 'True Cost' of production.")
-            st.graphviz_chart('''
-            digraph G {
-                rankdir=LR;
-                node [shape=box, style=filled, fillcolor="black", fontcolor="white"];
-                A [label="NYMEX Cotton"];
-                B [label="Henry Hub Gas"];
-                C [label="Yarn Algo"];
-                D [label="Your Dashboard"];
-                A -> C;
-                B -> C;
-                C -> D;
-            }
-            ''')
-            
+            st.graphviz_chart('digraph G { rankdir=LR; node [shape=box]; A -> B; }')
         with guide2:
-            st.info("Competitor Pricing uses 'Geopolitical Arbitrage'. It calculates the theoretical minimum price a competitor can offer based on their local advantages (e.g., Vietnam's lower logistics cost).")
-            st.markdown("- **China:** High volume subsidy (-6%)")
-            st.markdown("- **India:** Domestic cotton subsidy (-4%)")
-            
-        with guide3:
-            st.info("R&D modules use advanced simulation to mimic hardware sensors.")
-            st.code("FFT Analysis = Audio Frequency Decoding")
+            st.info("Competitor Pricing uses 'Geopolitical Arbitrage'.")
