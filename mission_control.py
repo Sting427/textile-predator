@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 import qrcode
 from io import BytesIO
 from scipy import signal
+import graphviz
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
@@ -116,7 +117,7 @@ def check_password():
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Singularity v25.1</div></div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Singularity v26.0</div></div></div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2: st.text_input("IDENTITY VERIFICATION", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Key...")
         return False
@@ -185,7 +186,7 @@ def generate_noise_pattern(freq, chaos):
 if check_password():
     with st.sidebar:
         st.markdown('<div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System Online</div></div>', unsafe_allow_html=True)
-        menu = st.radio("COMMAND", ["GLOBAL COMMAND", "WAR GAMES", "ALIEN TECH", "DIGITAL TWIN LAB", "HOLOGRAPHIC FLOOR", "NEURAL SCANNER", "ORBITAL LOGISTICS", "DEAL BREAKER", "LEDGER"])
+        menu = st.radio("COMMAND", ["GLOBAL COMMAND", "WAR GAMES", "ALIEN TECH", "DIGITAL TWIN LAB", "HOLOGRAPHIC FLOOR", "NEURAL SCANNER", "ORBITAL LOGISTICS", "DEAL BREAKER", "LEDGER", "ACADEMY"])
         st.divider()
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
 
@@ -244,6 +245,25 @@ if check_password():
             my_quote = st.number_input("Your Quote ($/kg)", 4.50)
             shock = st.slider("Global Price Shock (%)", -20, 20, 0)
             
+            # --- TACTICAL EXPLAINER ---
+            with st.expander("❓ HOW THE ENGINE WORKS"):
+                st.graphviz_chart('''
+                digraph logic {
+                    rankdir=LR;
+                    node [shape=box, style=filled, fillcolor="#222", fontcolor="white", fontname="Arial"];
+                    edge [color="#00d2ff"];
+                    A [label="Live Yarn Cost"];
+                    B [label="Labor Index\n(China/India/VN)"];
+                    C [label="Competitor\nSimulation"];
+                    D [label="Your Quote"];
+                    E [label="Probability\nScore"];
+                    A -> C;
+                    B -> C;
+                    C -> E;
+                    D -> E;
+                }
+                ''')
+            
         with col_sim:
             # Dynamic Calc
             base = yarn_cost * (1 + shock/100)
@@ -283,6 +303,14 @@ if check_password():
                 fig = go.Figure(data=[go.Surface(z=Z, colorscale='Viridis')])
                 fig.update_layout(title='Motor Harmonic Surface', autosize=False, width=500, height=500, margin=dict(l=65, r=50, b=65, t=90), paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True)
+            
+            with st.expander("❓ TECHNOLOGY: FFT ANALYSIS"):
+                 st.write("""
+                 **Fast Fourier Transform (FFT)** converts raw audio (time-domain) into frequencies. 
+                 - **Green Zones:** Normal motor vibration.
+                 - **Yellow Zones:** Harmonic distortion.
+                 - **Red Zones:** Bearing failure imminent.
+                 """)
         
         with tab2:
             st.markdown('<div class="skunk-card"><div class="skunk-title">INTERACTIVE GENERATIVE DESIGN</div></div>', unsafe_allow_html=True)
@@ -357,3 +385,35 @@ if check_password():
 
     elif menu == "LEDGER":
         st.dataframe(db_fetch_table("deals"), use_container_width=True)
+
+    # 9. ACADEMY (NEW TAB)
+    elif menu == "ACADEMY":
+        st.markdown("## 🎓 ROTex ACADEMY")
+        st.write("System Manual & Tactical Guides")
+        
+        guide1, guide2, guide3 = st.tabs(["Command Center", "War Games Logic", "Alien Tech"])
+        
+        with guide1:
+            st.info("The Global Command Center aggregates live financial data to give you the 'True Cost' of production.")
+            st.graphviz_chart('''
+            digraph G {
+                rankdir=LR;
+                node [shape=box, style=filled, fillcolor="black", fontcolor="white"];
+                A [label="NYMEX Cotton"];
+                B [label="Henry Hub Gas"];
+                C [label="Yarn Algo"];
+                D [label="Your Dashboard"];
+                A -> C;
+                B -> C;
+                C -> D;
+            }
+            ''')
+            
+        with guide2:
+            st.info("War Games uses 'Geopolitical Arbitrage'. It calculates the theoretical minimum price a competitor can offer based on their local advantages (e.g., Vietnam's lower logistics cost).")
+            st.markdown("- **China:** High volume subsidy (-6%)")
+            st.markdown("- **India:** Domestic cotton subsidy (-4%)")
+            
+        with guide3:
+            st.info("Alien Tech modules use advanced simulation to mimic hardware sensors.")
+            st.code("FFT Analysis = Audio Frequency Decoding")
