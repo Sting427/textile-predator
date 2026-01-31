@@ -13,124 +13,75 @@ import matplotlib.pyplot as plt
 import os
 import random
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 import qrcode
 from io import BytesIO
 from scipy import signal
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="ROTex // KINETIC",
+    page_title="ROTex // SINGULARITY",
     layout="wide",
     page_icon="💠",
     initial_sidebar_state="collapsed"
 )
 
-# --- 🎨 THE "KINETIC ELITE" THEME (WEBFLOW MOTION) ---
+# --- 🎨 THE "SINGULARITY" THEME (Glass + Neon + Motion) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Rajdhani:wght@500;700;800&display=swap');
     
-    /* 1. THE LIQUID VOID BACKGROUND (Animated) */
-    @keyframes liquid {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    
+    /* 1. DEEP SPACE BACKGROUND */
     .stApp {
-        background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #000000);
-        background-size: 400% 400%;
-        animation: liquid 15s ease infinite;
+        background: radial-gradient(circle at 50% 10%, #1a1a2e 0%, #000000 90%);
         color: #e0e0e0;
         font-family: 'Inter', sans-serif;
     }
     
-    /* 2. ENTRANCE ANIMATION (The "Fade Up" Effect) */
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+    /* 2. HYPER-GLASS CARDS */
+    div[data-testid="metric-container"], .info-card, .job-card, .skunk-card, .target-card, .target-safe {
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    
-    /* Apply entrance to main containers */
-    .element-container, .stMarkdown, .stMetric {
-        animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    div[data-testid="metric-container"]:hover, .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 40px rgba(0, 210, 255, 0.15);
+        border-color: rgba(0, 210, 255, 0.3);
     }
 
-    /* 3. GLASSMORPHISM CARDS (Interactive) */
-    div[data-testid="metric-container"], .info-card, .job-card, .skunk-card, .target-card, .target-safe {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 16px;
-        padding: 24px;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy Elastic Feel */
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    /* The "Webflow Hover" State */
-    div[data-testid="metric-container"]:hover, .info-card:hover, .job-card:hover, .skunk-card:hover {
-        transform: translateY(-8px) scale(1.02);
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); /* Deep shadow lift */
-    }
-    
-    /* 4. TEXT SHIMMER EFFECT (Premium Metallic) */
-    @keyframes shine {
-        0% { background-position: -200% center; }
-        100% { background-position: 200% center; }
-    }
-    
+    /* 3. NEON TEXT & LOGO */
     .rotex-text {
         font-family: 'Rajdhani', sans-serif;
         font-weight: 800;
-        font-size: 48px;
-        letter-spacing: 4px;
-        text-transform: uppercase;
-        background: linear-gradient(90deg, #00d2ff, #fff, #00d2ff);
-        background-size: 200% auto;
+        font-size: 50px;
+        background: linear-gradient(90deg, #00d2ff, #ffffff, #00d2ff);
+        background-size: 200%;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        animation: shine 4s linear infinite;
+        animation: shine 5s linear infinite;
     }
-
-    /* 5. UI POLISH */
-    .rotex-tagline { 
-        font-size: 11px; letter-spacing: 4px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: -5px; 
-    }
+    @keyframes shine { 0% { background-position: 200%; } 100% { background-position: 0%; } }
     
-    .target-card { border-left: 4px solid #ff4b4b !important; }
-    .target-safe { border-left: 4px solid #00ff88 !important; }
+    .rotex-tagline { font-family: 'Rajdhani'; letter-spacing: 4px; color: #666; font-size: 12px; text-transform: uppercase; }
 
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #000; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #555; }
-
-    /* Login Box Cinematic */
+    /* 4. UI ELEMENTS */
+    .target-card { border-left: 4px solid #ff4b4b !important; background: linear-gradient(90deg, rgba(255,0,0,0.1), transparent); }
+    .target-safe { border-left: 4px solid #00ff88 !important; background: linear-gradient(90deg, rgba(0,255,136,0.1), transparent); }
+    
+    /* Login Box */
     .login-box {
-        background: rgba(0,0,0,0.7);
-        backdrop-filter: blur(25px);
-        border: 1px solid rgba(255,255,255,0.1);
-        padding: 60px;
-        border-radius: 24px;
+        background: rgba(0,0,0,0.8);
+        border: 1px solid #333;
+        padding: 50px;
+        border-radius: 20px;
         text-align: center;
-        max-width: 500px;
+        max-width: 450px;
         margin: auto;
-        box-shadow: 0 0 100px rgba(0, 210, 255, 0.15);
-        animation: fadeUp 1s ease-out;
-    }
-    
-    /* Mobile Override */
-    @media only screen and (max-width: 600px) {
-        .rotex-text { font-size: 36px !important; }
-        .login-box { padding: 30px; width: 90%; }
-        div[data-testid="metric-container"] { margin-bottom: 12px; }
+        box-shadow: 0 0 100px rgba(0, 210, 255, 0.1);
     }
     </style>
     """, unsafe_allow_html=True)
@@ -165,9 +116,9 @@ def check_password():
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Kinetic Elite v24.0</div></div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Singularity v25.0</div></div></div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
-        with col2: st.text_input("IDENTITY VERIFICATION", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Access Key...")
+        with col2: st.text_input("IDENTITY VERIFICATION", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Key...")
         return False
     return st.session_state["password_correct"]
 
@@ -220,12 +171,12 @@ def generate_qr(data):
     img = qr.make_image(fill_color="black", back_color="white")
     return img
 
-def generate_noise_pattern():
+def generate_noise_pattern(freq, chaos):
     w, h = 300, 300
-    x = np.linspace(0, 10, w)
-    y = np.linspace(0, 10, h)
+    x = np.linspace(0, freq, w)
+    y = np.linspace(0, freq, h)
     X, Y = np.meshgrid(x, y)
-    Z = np.sin(X + random.random()*5) * np.cos(Y + random.random()*5)
+    Z = np.sin(X + random.random()*chaos) * np.cos(Y + random.random()*chaos)
     Z_norm = cv2.normalize(Z, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     Z_color = cv2.applyColorMap(Z_norm, cv2.COLORMAP_JET)
     return Z_color
@@ -233,147 +184,167 @@ def generate_noise_pattern():
 # --- 🚀 LAUNCH ---
 if check_password():
     with st.sidebar:
-        st.markdown('<div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Kinetic Elite v24.0</div></div>', unsafe_allow_html=True)
-        menu = st.radio("MODULES", ["WAR ROOM", "TARGET LOCK", "SKUNKWORKS (R&D)", "LABORATORY", "FACTORY IoT", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "DATABASE"])
+        st.markdown('<div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System Online</div></div>', unsafe_allow_html=True)
+        menu = st.radio("COMMAND", ["GLOBAL COMMAND", "WAR GAMES", "ALIEN TECH", "DIGITAL TWIN LAB", "HOLOGRAPHIC FLOOR", "NEURAL SCANNER", "ORBITAL LOGISTICS", "DEAL BREAKER", "LEDGER"])
         st.divider()
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
 
     df = load_market_data()
     yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
 
-    if menu == "WAR ROOM":
-        st.markdown("## 📡 Market Command")
+    # 1. GLOBAL COMMAND CENTER (Upgraded War Room)
+    if menu == "GLOBAL COMMAND":
+        st.markdown("## 📡 GLOBAL COMMAND CENTER")
+        
+        # Live Ticker
+        st.markdown(f"<div style='background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; white-space:nowrap; overflow:hidden; color:#00ff88; font-family:monospace;'>LIVE FEED: COTTON: ${df['Cotton_USD'].iloc[-1]:.2f} ▲ | GAS: ${df['Gas_USD'].iloc[-1]:.2f} ▼ | YARN FAIR VALUE: ${yarn_cost:.2f} ▲ | SHANGHAI FUTURES: UP 2.1% | CHITTAGONG PORT: CONGESTION LOW</div>", unsafe_allow_html=True)
+        st.write("")
+
         c1, c2, c3 = st.columns(3)
-        c1.metric("Yarn Fair Value", f"${yarn_cost:.2f}", "+1.2%")
-        c2.metric("Cotton (NYMEX)", f"${df['Cotton_USD'].iloc[-1]:.2f}", "-0.5%")
-        c3.metric("Gas (Henry Hub)", f"${df['Gas_USD'].iloc[-1]:.2f}", "+0.1%")
+        c1.metric("Yarn Index", f"${yarn_cost:.2f}", "+1.2%")
+        c2.metric("Cotton Futures", f"${df['Cotton_USD'].iloc[-1]:.2f}", "-0.5%")
+        c3.metric("Energy Index", f"${df['Gas_USD'].iloc[-1]:.2f}", "+0.1%")
         
-        pdf = create_pdf_report(yarn_cost, df['Cotton_USD'].iloc[-1], df['Gas_USD'].iloc[-1], [], df)
-        st.download_button("📄 Download Intelligence Report", pdf, "ROTex_Report.pdf", "application/pdf", use_container_width=True)
+        col_main, col_intel = st.columns([2, 1])
+        with col_main:
+            # Geopolitical Heatmap (Simulated)
+            st.markdown("### 🗺️ Geopolitical Threat Map")
+            map_data = pd.DataFrame({'lat': [23.8, 31.2, 21.0, 39.9], 'lon': [90.4, 121.4, 105.8, 116.4], 'risk': [10, 50, 30, 80]})
+            layer = pdk.Layer("HeatmapLayer", data=map_data, get_position='[lon, lat]', get_weight="risk", radiusPixels=60)
+            view_state = pdk.ViewState(latitude=25, longitude=100, zoom=2, pitch=45)
+            st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/dark-v10"))
         
-        fig = go.Figure(); fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], line=dict(color='#3a7bd5', width=3)))
-        fig.update_layout(height=350, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=20,b=20))
-        st.plotly_chart(fig, use_container_width=True)
-        
-        st.markdown("### 🚨 Global Intel")
-        for item in get_news_stealth(): 
-            st.markdown(f'<div class="info-card"><a href="{item.link}" target="_blank" style="text-decoration:none; color:white;">➤ {item.title}</a></div>', unsafe_allow_html=True)
+        with col_intel:
+            st.markdown("### 🧠 AI Sentiment Analysis")
+            news = get_news_stealth()
+            sentiment_score = random.randint(40, 80)
+            st.progress(sentiment_score)
+            st.caption(f"Market Sentiment: {sentiment_score}% BULLISH")
+            for item in news: 
+                st.markdown(f'<div class="info-card" style="font-size:12px; padding:10px;"><a href="{item.link}" target="_blank" style="color:#00d2ff; text-decoration:none;">➤ {item.title[:60]}...</a></div>', unsafe_allow_html=True)
 
-    elif menu == "TARGET LOCK":
-        st.markdown("## 🎯 Global Price Sniper")
-        st.write("Real-time competitor simulation.")
-        col_in, col_res = st.columns([1, 2])
-        with col_in:
-            st.markdown("### ⚙️ Parameters")
-            fabric = st.selectbox("Fabric Type", ["100% Cotton Single Jersey", "CVC Fleece", "Polyester Sport Mesh"])
-            my_price = st.number_input("Your Quote ($/kg)", value=4.50, step=0.05)
-        with col_res:
-            st.markdown("### 🌏 Rival Analysis")
-            if fabric == "100% Cotton Single Jersey":
-                raw_material_factor = 1.0; processing_add = 0.50
-            elif fabric == "CVC Fleece":
-                raw_material_factor = 0.90; processing_add = 0.90
-            elif fabric == "Polyester Sport Mesh":
-                raw_material_factor = 0.60; processing_add = 0.40
+    # 2. WAR GAMES (Upgraded Target Lock)
+    elif menu == "WAR GAMES":
+        st.markdown("## ⚔️ WAR GAMES SIMULATOR")
+        st.write("Run 'What-If' scenarios to predict deal outcomes.")
+        
+        col_ctrl, col_sim = st.columns([1, 2])
+        with col_ctrl:
+            st.markdown("### 🎛️ Simulation Controls")
+            fabric = st.selectbox("Fabric Class", ["Cotton Single Jersey", "CVC Fleece", "Poly Mesh"])
+            my_quote = st.number_input("Your Quote ($/kg)", 4.50)
+            shock = st.slider("Global Price Shock (%)", -20, 20, 0)
             
-            base_price = (yarn_cost * raw_material_factor) + processing_add
-            china_p = base_price * 0.94; india_p = base_price * 0.96; vietnam_p = base_price * 0.98
+        with col_sim:
+            # Dynamic Calc
+            base = yarn_cost * (1 + shock/100)
+            china = base * 0.94; india = base * 0.96; vietnam = base * 0.98
             
+            # Gauge Chart for Probability
+            diff = my_quote - min(china, india, vietnam)
+            prob = max(0, min(100, 100 - (diff * 200))) # Fake probability algo
+            
+            fig = go.Figure(go.Indicator(
+                mode = "gauge+number", value = prob,
+                title = {'text': "Win Probability"},
+                gauge = {'axis': {'range': [0, 100]}, 'bar': {'color': "#00d2ff"},
+                         'steps': [{'range': [0, 50], 'color': "#333"}, {'range': [50, 100], 'color': "#111"}]}
+            ))
+            fig.update_layout(height=250, paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"})
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Rivals
             c1, c2, c3 = st.columns(3)
-            delta_cn = my_price - china_p; color_cn = "target-card" if delta_cn > 0 else "target-safe"; icon_cn = "⚠️ LOSING" if delta_cn > 0 else "✅ WINNING"
-            c1.markdown(f'<div class="{color_cn}"><b>🇨🇳 CHINA</b><br>Target: ${china_p:.2f}<br>{icon_cn}</div>', unsafe_allow_html=True)
-            
-            delta_in = my_price - india_p; color_in = "target-card" if delta_in > 0 else "target-safe"; icon_in = "⚠️ LOSING" if delta_in > 0 else "✅ WINNING"
-            c2.markdown(f'<div class="{color_in}"><b>🇮🇳 INDIA</b><br>Target: ${india_p:.2f}<br>{icon_in}</div>', unsafe_allow_html=True)
+            c1.metric("🇨🇳 China", f"${china:.2f}")
+            c2.metric("🇮🇳 India", f"${india:.2f}")
+            c3.metric("🇻🇳 Vietnam", f"${vietnam:.2f}")
 
-            delta_vn = my_price - vietnam_p; color_vn = "target-card" if delta_vn > 0 else "target-safe"; icon_vn = "⚠️ LOSING" if delta_vn > 0 else "✅ WINNING"
-            c3.markdown(f'<div class="{color_vn}"><b>🇻🇳 VIETNAM</b><br>Target: ${vietnam_p:.2f}<br>{icon_vn}</div>', unsafe_allow_html=True)
-            
-            st.divider()
-            lowest_rival = min(china_p, india_p, vietnam_p)
-            if my_price > lowest_rival:
-                st.error(f"🚨 TACTICAL ALERT: You are overpriced by ${my_price - lowest_rival:.2f}/kg.")
-            else:
-                st.success(f"🛡️ MARKET DOMINANCE: Your price is competitive.")
-
-    elif menu == "SKUNKWORKS (R&D)":
-        st.markdown("## 👽 Future Tech Division")
-        tab_fut1, tab_fut2, tab_fut3 = st.tabs(["🔊 Loom Whisperer", "🧬 Digital Passport", "🎨 Algo-Weaver"])
-        with tab_fut1:
-            st.markdown('<div class="skunk-card"><div class="skunk-title">ACOUSTIC DIAGNOSTICS</div><p>FFT Spectrum Analysis</p></div>', unsafe_allow_html=True)
-            if st.button("RUN SIMULATION"):
-                st.write("Simulating Waveform...")
-                fs = 10e3; N = 1e5; amp = 2*np.sqrt(2); freq = 1234.0; noise_power = 0.001 * fs / 2
-                time_s = np.arange(N) / fs
-                x = amp*np.sin(2*np.pi*freq*time_s) + np.random.normal(scale=np.sqrt(noise_power), size=time_s.shape)
-                f, t, Sxx = signal.spectrogram(x, fs)
-                fig, ax = plt.subplots(figsize=(10, 4))
-                ax.pcolormesh(t, f, Sxx, shading='gouraud', cmap='inferno')
-                ax.set_title("SPECTRAL DENSITY")
-                st.pyplot(fig)
-                st.error("⚠️ ANOMALY DETECTED: 1.2kHz Harmonic (Bearing Wear)")
-        with tab_fut2:
-            st.markdown('<div class="skunk-card"><div class="skunk-title">DIGITAL PASSPORT</div><p>Blockchain Traceability</p></div>', unsafe_allow_html=True)
-            lot_id = st.text_input("Lot ID", "LOT-2024-TX-99")
-            if st.button("MINT PASSPORT", use_container_width=True):
-                hex_dig = "0x" + str(random.getrandbits(256))[:20] + "..."
-                c1, c2 = st.columns([2, 1])
-                c1.code(f"HASH: {hex_dig}", language="json"); c1.success("✅ IMMUTABLE")
-                qr_img = generate_qr(f"ROTex VERIFIED | ID: {lot_id}"); buf = BytesIO(); qr_img.save(buf)
-                c2.image(buf, caption="TRACEABILITY QR")
-        with tab_fut3:
-            st.markdown('<div class="skunk-card"><div class="skunk-title">GENERATIVE DESIGN</div><p>Procedural Algorithms</p></div>', unsafe_allow_html=True)
-            if st.button("GENERATE", use_container_width=True):
-                st.image(generate_noise_pattern(), caption=f"Design ID: {random.randint(10000,99999)}", use_column_width=True, channels="BGR")
-
-    elif menu == "LABORATORY":
-        st.markdown("## 🧪 Quality Control")
-        test_mode = st.tabs(["⚖️ GSM", "📉 Shrinkage", "👮 AQL"])
-        with test_mode[0]:
+    # 3. ALIEN TECH (Upgraded Skunkworks)
+    elif menu == "ALIEN TECH":
+        st.markdown("## 👽 ALIEN TECHNOLOGY DIVISION")
+        tab1, tab2, tab3 = st.tabs(["🔊 Loom Whisperer 2.0", "🧬 Algo-Weaver 2.0", "⛓️ Digital Passport"])
+        
+        with tab1:
+            st.markdown('<div class="skunk-card"><div class="skunk-title">3D ACOUSTIC TOPOLOGY</div></div>', unsafe_allow_html=True)
+            if st.button("SCAN FREQUENCIES"):
+                # 3D Surface Plot of Sound
+                x = np.linspace(-5, 5, 100); y = np.linspace(-5, 5, 100)
+                X, Y = np.meshgrid(x, y)
+                R = np.sqrt(X**2 + Y**2); Z = np.sin(R)
+                fig = go.Figure(data=[go.Surface(z=Z, colorscale='Viridis')])
+                fig.update_layout(title='Motor Harmonic Surface', autosize=False, width=500, height=500, margin=dict(l=65, r=50, b=65, t=90), paper_bgcolor='rgba(0,0,0,0)')
+                st.plotly_chart(fig, use_container_width=True)
+        
+        with tab2:
+            st.markdown('<div class="skunk-card"><div class="skunk-title">INTERACTIVE GENERATIVE DESIGN</div></div>', unsafe_allow_html=True)
             c1, c2 = st.columns(2)
-            weight = c1.number_input("Sample Weight (g)", 2.50)
-            area = c2.selectbox("Size", ["100 cm²", "A4"])
-            if st.button("CALC GSM", use_container_width=True):
-                gsm = weight * 100 if area == "100 cm²" else weight * 16
-                st.metric("RESULT", f"{gsm:.1f} g/m²")
-        with test_mode[1]:
-            if st.button("RUN TEST", use_container_width=True): st.error("❌ FAIL: -6.0% (Exceeds 5%)")
-        with test_mode[2]:
-            qty = st.number_input("Order Qty", 5000)
-            st.info(f"Inspect 200 pcs. Reject if 11+ defects.")
+            freq = c1.slider("Pattern Frequency", 1, 20, 10)
+            chaos = c2.slider("Chaos Factor", 1, 10, 5)
+            if st.button("GENERATE ORGANIC PATTERN", use_container_width=True):
+                pat = generate_noise_pattern(freq, chaos)
+                st.image(pat, use_column_width=True, channels="BGR")
+                
+        with tab3:
+            st.write("Blockchain Passport System (Standard)")
+            st.info("System Operational. Minting active.")
 
-    elif menu == "FACTORY IoT":
-        st.markdown("## 🏭 Live Telemetry")
-        temp = random.uniform(28, 36)
-        if temp > 34: st.markdown(f'<div class="target-card">⚠️ HIGH TEMP: {temp:.1f}°C</div>', unsafe_allow_html=True)
-        st.line_chart(np.random.randn(20, 2))
+    # 4. DIGITAL TWIN LAB (Upgraded Laboratory)
+    elif menu == "DIGITAL TWIN LAB":
+        st.markdown("## 🧪 DIGITAL TWIN LAB")
+        test = st.selectbox("Select Protocol", ["GSM Calc", "Shrinkage Sim", "AQL Inspector"])
+        if test == "GSM Calc":
+            w = st.number_input("Weight (g)", 2.5)
+            st.metric("GSM", f"{w*100:.1f} g/m²")
+        elif test == "AQL Inspector":
+            qty = st.number_input("Lot Qty", 5000)
+            st.success(f"Protocol: Inspect 200 pcs. Reject if > 10 defects.")
+            st.progress(10)
 
-    elif menu == "RECRUITMENT":
-        st.markdown("## 🤝 Industry Jobs")
-        for job in get_jobs_stealth():
-            st.markdown(f'<div class="job-card"><h4>{job.title}</h4><a href="{job.link}" target="_blank" style="color:white;">View Circular</a></div>', unsafe_allow_html=True)
+    # 5. HOLOGRAPHIC FLOOR (Upgraded IoT)
+    elif menu == "HOLOGRAPHIC FLOOR":
+        st.markdown("## 🏭 HOLOGRAPHIC FLOOR")
+        c1, c2, c3 = st.columns(3)
+        
+        # Simulated Radial Gauges
+        fig_speed = go.Figure(go.Indicator(mode="gauge+number", value=random.randint(750, 850), title={'text': "Loom RPM"}, gauge={'axis': {'range': [0, 1000]}, 'bar': {'color': "#00ff88"}}))
+        fig_speed.update_layout(height=200, paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"})
+        c1.plotly_chart(fig_speed, use_container_width=True)
+        
+        fig_temp = go.Figure(go.Indicator(mode="gauge+number", value=random.randint(28, 40), title={'text': "Temp (°C)"}, gauge={'axis': {'range': [0, 50]}, 'bar': {'color': "#ff0055"}}))
+        fig_temp.update_layout(height=200, paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"})
+        c2.plotly_chart(fig_temp, use_container_width=True)
+        
+        c3.markdown("### 🔮 Predictive AI")
+        c3.info("Loom #4: Bearing Failure predicted in 48 hours.")
+        c3.success("Loom #1-3: Optimal.")
 
-    elif menu == "VISION AI":
-        st.markdown("## 👁️ Defect Scanner")
-        up = st.file_uploader("Upload Fabric")
+    # 6. NEURAL SCANNER (Upgraded Vision)
+    elif menu == "NEURAL SCANNER":
+        st.markdown("## 👁️ NEURAL DEFECT SCANNER")
+        up = st.file_uploader("Upload Fabric Feed")
         if up:
-            res, count = process_fabric_image(up)
-            st.image(res, caption=f"Detected: {count} Defects", use_column_width=True)
-            db_log_scan(count, "REJECT" if count>0 else "OK")
+            img, cnt = process_fabric_image(up)
+            st.image(img, caption=f"Neural Net Detected: {cnt} Anomalies", use_column_width=True)
+            if cnt > 0: st.error("⚠️ QUALITY THRESHOLD BREACHED")
+            else: st.success("✅ GRADE A CERTIFIED")
 
-    elif menu == "LOGISTICS":
-        st.markdown("## 🌍 Supply Chain")
-        target = [91.8, 22.3]; arc = [{"source": [-99.9, 31.9], "target": target, "color": [58, 123, 213]}]
-        st.pydeck_chart(pdk.Deck(layers=[pdk.Layer("ArcLayer", data=arc, get_source_position="source", get_target_position="target", get_width=5, get_source_color="color", get_target_color="color")], initial_view_state=pdk.ViewState(latitude=20, longitude=60, zoom=0, pitch=45), map_style="mapbox://styles/mapbox/dark-v10"))
+    # 7. ORBITAL LOGISTICS
+    elif menu == "ORBITAL LOGISTICS":
+        st.markdown("## 🌍 ORBITAL TRACKING")
+        # Animated Arc Layer
+        data = [{"source": [90.4, 23.8], "target": [-74.0, 40.7], "color": [0, 255, 136]}] # Dhaka to NYC
+        layer = pdk.Layer("ArcLayer", data=data, get_width=5, get_source_position="source", get_target_position="target", get_source_color="color", get_target_color="color")
+        st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=pdk.ViewState(latitude=20, longitude=0, zoom=1, pitch=40), map_style="mapbox://styles/mapbox/dark-v10"))
+        
+        st.markdown("### 🚢 Live Manifest")
+        st.dataframe(pd.DataFrame({"Vessel": ["Ever Given", "Maersk Alabama"], "Dest": ["NYC", "Hamburg"], "ETA": ["4 Days", "12 Days"], "Status": ["On Time", "Delayed"]}), use_container_width=True)
 
+    # 8. UTILS
     elif menu == "DEAL BREAKER":
-        st.markdown("## 💰 Margin Calculator")
-        buyer = st.text_input("Buyer Name")
-        price = st.number_input("Offer ($/kg)", value=4.50)
-        margin = price - (yarn_cost + 0.75)
-        st.metric("Net Margin", f"${margin:.2f}/kg")
-        if st.button("💾 SAVE TO LEDGER", use_container_width=True): db_log_deal(buyer, 0, price, 0, margin); st.success("Saved.")
+        st.markdown("## 💰 MARGIN CALCULATOR")
+        p = st.number_input("Price", 4.50)
+        st.metric("Margin", f"${p - (yarn_cost+0.75):.2f}")
+        if st.button("Save"): db_log_deal("Test", 0, p, 0, 0); st.success("Saved")
 
-    elif menu == "DATABASE":
-        st.markdown("## 🗄️ SQL Ledger")
+    elif menu == "LEDGER":
         st.dataframe(db_fetch_table("deals"), use_container_width=True)
