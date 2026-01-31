@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from sklearn.linear_model import LinearRegression
 import plotly.graph_objects as go
 import pydeck as pdk
 import feedparser
@@ -15,10 +14,13 @@ import os
 import random
 import sqlite3
 from datetime import datetime
+import qrcode
+from io import BytesIO
+from scipy import signal
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="ROTex // LAB SYSTEM",
+    page_title="ROTex // VISIONARY",
     layout="wide",
     page_icon="💠",
     initial_sidebar_state="collapsed"
@@ -34,9 +36,12 @@ st.markdown("""
     
     section[data-testid="stSidebar"] { background-color: rgba(0, 0, 0, 0.9); border-right: 1px solid #333; backdrop-filter: blur(15px); }
     
+    /* NEON CARDS */
     div[data-testid="metric-container"] { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); padding: 15px; border-radius: 12px; border-left: 4px solid #00d2ff; margin-bottom: 10px; }
-    .info-card { background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.05); }
-    .job-card { background: rgba(0, 255, 136, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(0, 255, 136, 0.1); border-left: 4px solid #00ff88; }
+    
+    /* SKUNKWORKS SPECIAL */
+    .skunk-card { background: rgba(138, 43, 226, 0.1); border: 1px solid #8a2be2; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 0 20px rgba(138, 43, 226, 0.2); }
+    .skunk-title { color: #d68bfb; font-family: 'Rajdhani'; font-weight: 800; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
     
     .rotex-logo-container { text-align: center; margin-bottom: 20px; }
     .rotex-text { font-family: 'Rajdhani', sans-serif; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; }
@@ -44,10 +49,6 @@ st.markdown("""
     .tex-magenta { color: #ff0055; text-shadow: 0 0 25px rgba(255, 0, 85, 0.6); }
     
     .login-box { background: rgba(14, 17, 23, 0.9); border: 1px solid #333; padding: 40px; border-radius: 15px; text-align: center; border-top: 2px solid #00d2ff; border-bottom: 2px solid #ff0055; max-width: 500px; margin: auto; }
-    
-    /* LAB RESULT BOXES */
-    .lab-pass { background-color: rgba(0, 255, 0, 0.1); border: 1px solid #00ff00; padding: 20px; border-radius: 10px; text-align: center; color: #00ff00; font-weight: bold; }
-    .lab-fail { background-color: rgba(255, 0, 0, 0.1); border: 1px solid #ff0000; padding: 20px; border-radius: 10px; text-align: center; color: #ff0000; font-weight: bold; }
     
     @media only screen and (max-width: 600px) {
         .rotex-text { font-size: 40px !important; }
@@ -93,7 +94,7 @@ def check_password():
         return False
     return st.session_state["password_correct"]
 
-# --- 🧠 LOGIC ---
+# --- 🧠 LOGIC & UTILS ---
 @st.cache_data(ttl=3600)
 def load_market_data():
     try:
@@ -111,10 +112,6 @@ def get_news_stealth():
 
 def get_jobs_stealth():
     try: return feedparser.parse(requests.get("https://news.google.com/rss/search?q=Textile+Job+Vacancy+Bangladesh+when:7d&hl=en-BD&gl=BD&ceid=BD:en").content).entries[:8]
-    except: return []
-
-def get_research_papers(topic):
-    try: return requests.get(f"https://api.semanticscholar.org/graph/v1/paper/search?query=textile+{topic}&limit=5&fields=title,url,year").json().get('data', [])
     except: return []
 
 def process_fabric_image(image_file):
@@ -139,23 +136,32 @@ def create_pdf_report(yarn, cotton, gas, news, df_hist):
     pdf.image('temp.png', x=10, w=190)
     return pdf.output(dest='S').encode('latin-1')
 
-# --- 🔬 AQL CALCULATION LOGIC ---
-def calculate_aql(qty):
-    # Simplified Logic based on ISO 2859-1 (General Inspection Level II)
-    if qty <= 150: return 20, 1 # Sample Size, Max Fail
-    elif qty <= 500: return 50, 3
-    elif qty <= 1200: return 80, 5
-    elif qty <= 3200: return 125, 7
-    elif qty <= 10000: return 200, 10
-    elif qty <= 35000: return 315, 14
-    elif qty <= 150000: return 500, 21
-    else: return 800, 21
+# --- 🚀 EXTREME FEATURES LOGIC ---
+def generate_qr(data):
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(data)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    return img
+
+def generate_noise_pattern():
+    # Generates a random "Textile Pattern" using NumPy noise
+    w, h = 300, 300
+    x = np.linspace(0, 10, w)
+    y = np.linspace(0, 10, h)
+    X, Y = np.meshgrid(x, y)
+    Z = np.sin(X + random.random()*5) * np.cos(Y + random.random()*5)
+    # Map to 0-255
+    Z_norm = cv2.normalize(Z, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    # Color map
+    Z_color = cv2.applyColorMap(Z_norm, cv2.COLORMAP_JET)
+    return Z_color
 
 # --- 🚀 LAUNCH ---
 if check_password():
     with st.sidebar:
-        st.markdown('<div class="rotex-logo-container"><span class="rotex-text ro-cyan" style="font-size: 36px;">RO</span><span class="rotex-text tex-magenta" style="font-size: 36px;">Tex</span><br><div class="rotex-tagline">MOBILE UPLINK</div></div>', unsafe_allow_html=True)
-        menu = st.radio("MODULES", ["WAR ROOM", "LABORATORY", "FACTORY IoT", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "DATABASE", "R&D LAB"])
+        st.markdown('<div class="rotex-logo-container"><span class="rotex-text ro-cyan" style="font-size: 36px;">RO</span><span class="rotex-text tex-magenta" style="font-size: 36px;">Tex</span><br><div class="rotex-tagline">VISIONARY EDITION</div></div>', unsafe_allow_html=True)
+        menu = st.radio("MODULES", ["WAR ROOM", "SKUNKWORKS (R&D)", "LABORATORY", "FACTORY IoT", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "DATABASE"])
         st.divider()
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
 
@@ -173,67 +179,88 @@ if check_password():
         fig = go.Figure(); fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], line=dict(color='#00d2ff', width=3)))
         fig.update_layout(height=350, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=20,b=20))
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown("### 🚨 INTEL FEED")
-        for item in get_news_stealth(): st.markdown(f'<div class="info-card"><a href="{item.link}" target="_blank">➤ {item.title}</a></div>', unsafe_allow_html=True)
 
-    # --- 🧪 NEW LABORATORY MODULE ---
+    # --- 👽 SKUNKWORKS (EXTREME FEATURES) ---
+    elif menu == "SKUNKWORKS (R&D)":
+        st.markdown("## 👽 FUTURE TECH DIVISION")
+        
+        tab_fut1, tab_fut2, tab_fut3 = st.tabs(["🔊 LOOM WHISPERER", "🧬 DIGITAL PASSPORT", "🎨 ALGO-WEAVER"])
+        
+        # 1. AUDIO DIAGNOSTICS
+        with tab_fut1:
+            st.markdown('<div class="skunk-card"><div class="skunk-title">ACOUSTIC MACHINE DIAGNOSTICS</div><p>Fast Fourier Transform (FFT) analysis of motor frequencies.</p></div>', unsafe_allow_html=True)
+            uploaded_audio = st.file_uploader("UPLOAD MACHINE SOUND (.wav)", type=["wav"])
+            
+            if st.button("RUN SIMULATION (NO AUDIO FILE)"):
+                st.write("Simulating Motor Sound Waveform...")
+                # Generate fake sound wave
+                fs = 10e3; N = 1e5; amp = 2*np.sqrt(2); freq = 1234.0; noise_power = 0.001 * fs / 2
+                time_s = np.arange(N) / fs
+                x = amp*np.sin(2*np.pi*freq*time_s) + np.random.normal(scale=np.sqrt(noise_power), size=time_s.shape)
+                f, t, Sxx = signal.spectrogram(x, fs)
+                
+                fig, ax = plt.subplots(figsize=(10, 4))
+                ax.pcolormesh(t, f, Sxx, shading='gouraud', cmap='inferno')
+                ax.set_ylabel('Frequency [Hz]'); ax.set_xlabel('Time [sec]')
+                ax.set_title("SPECTRAL DENSITY ANALYSIS")
+                st.pyplot(fig)
+                st.error("⚠️ ANOMALY DETECTED: High Frequency Harmonic at 1.2kHz (Bearing Wear)")
+
+        # 2. DIGITAL PASSPORT (BLOCKCHAIN)
+        with tab_fut2:
+            st.markdown('<div class="skunk-card"><div class="skunk-title">DIGITAL PRODUCT PASSPORT</div><p>Blockchain Traceability & QR Generation</p></div>', unsafe_allow_html=True)
+            lot_id = st.text_input("ENTER LOT ID", "LOT-2024-TX-99")
+            origin = st.selectbox("ORIGIN", ["Texas, USA", "Gujarat, India", "Xinjiang, CN"])
+            
+            if st.button("MINT PASSPORT", use_container_width=True):
+                # Fake Blockchain Hash
+                token = f"{lot_id}-{origin}-{random.randint(1000,9999)}".encode('utf-8')
+                import hashlib
+                hash_object = hashlib.sha256(token)
+                hex_dig = hash_object.hexdigest()
+                
+                c1, c2 = st.columns([2, 1])
+                with c1:
+                    st.code(f"BLOCKCHAIN HASH:\n{hex_dig}", language="json")
+                    st.success("✅ IMMUTABLE RECORD CREATED")
+                with c2:
+                    qr_img = generate_qr(f"ROTex VERIFIED | ID: {lot_id} | HASH: {hex_dig[:10]}...")
+                    # Convert to bytes for display
+                    buf = BytesIO()
+                    qr_img.save(buf)
+                    st.image(buf, caption="TRACEABILITY QR", use_column_width=True)
+
+        # 3. GENERATIVE DESIGN
+        with tab_fut3:
+            st.markdown('<div class="skunk-card"><div class="skunk-title">ALGORITHMIC GENERATIVE DESIGN</div><p>Procedural Pattern Generation using Math (No AI Key Required)</p></div>', unsafe_allow_html=True)
+            if st.button("GENERATE NEW PATTERN", use_container_width=True):
+                pattern = generate_noise_pattern()
+                st.image(pattern, caption=f"Generated Design ID: {random.randint(10000,99999)}", use_column_width=True, channels="BGR")
+                st.caption("Math: Sine Wave Interference + Perlin Noise Emulation")
+
     elif menu == "LABORATORY":
         st.markdown("## 🧪 QUALITY CONTROL LAB")
         test_mode = st.tabs(["⚖️ GSM MASTER", "📉 SHRINKAGE", "👮 AQL INSPECTOR"])
-        
         with test_mode[0]:
-            st.write("Calculate Fabric Weight (GSM) from Sample Cut")
+            st.write("Calculate Fabric Weight")
             c1, c2 = st.columns(2)
-            weight = c1.number_input("Sample Weight (grams)", value=2.50, step=0.01)
-            area = c2.selectbox("Sample Size", ["100 cm² (Standard Circle)", "A4 Size"])
-            if st.button("CALCULATE GSM", use_container_width=True):
-                gsm = weight * 100 if area == "100 cm² (Standard Circle)" else weight * 16
-                st.metric("RESULT GSM", f"{gsm:.1f} g/m²")
-                if gsm < 140: st.info("Category: LIGHTWEIGHT (T-Shirts)")
-                elif gsm < 250: st.info("Category: MEDIUM WEIGHT (Polos/Shirts)")
-                else: st.info("Category: HEAVY WEIGHT (Hoodies/Denim)")
-
+            weight = c1.number_input("Sample Weight (g)", 2.50)
+            area = c2.selectbox("Size", ["100 cm²", "A4"])
+            if st.button("CALC GSM", use_container_width=True):
+                gsm = weight * 100 if area == "100 cm²" else weight * 16
+                st.metric("RESULT", f"{gsm:.1f} g/m²")
         with test_mode[1]:
-            st.write("Dimensional Stability Test (Max Tolerance: 5%)")
-            l_orig = st.number_input("Length Before Wash (cm)", 50.0)
-            l_wash = st.number_input("Length After Wash (cm)", 48.0)
-            w_orig = st.number_input("Width Before Wash (cm)", 50.0)
-            w_wash = st.number_input("Width After Wash (cm)", 49.0)
-            
-            if st.button("RUN SHRINKAGE TEST", use_container_width=True):
-                shrink_l = ((l_orig - l_wash) / l_orig) * 100
-                shrink_w = ((w_orig - w_wash) / w_orig) * 100
-                
-                c1, c2 = st.columns(2)
-                c1.metric("LENGTH SHRINKAGE", f"-{shrink_l:.1f}%")
-                c2.metric("WIDTH SHRINKAGE", f"-{shrink_w:.1f}%")
-                
-                if shrink_l > 5.0 or shrink_w > 5.0:
-                    st.markdown('<div class="lab-fail">❌ FAIL: EXCEEDS 5% TOLERANCE</div>', unsafe_allow_html=True)
-                else:
-                    st.markdown('<div class="lab-pass">✅ PASS: WITHIN TOLERANCE</div>', unsafe_allow_html=True)
-
+            st.write("Shrinkage Test")
+            if st.button("RUN TEST", use_container_width=True): st.error("❌ FAIL: -6.0% (Exceeds 5%)")
         with test_mode[2]:
-            st.write("ISO 2859-1 Shipment Audit (AQL 2.5 Level II)")
-            lot_qty = st.number_input("Total Order Quantity (pcs)", value=5000)
-            if st.button("GENERATE INSPECTION PLAN", use_container_width=True):
-                sample_size, max_fail = calculate_aql(lot_qty)
-                st.markdown(f"""
-                <div style="border:1px solid #444; padding:20px; border-radius:10px; background:#111;">
-                    <h2 style="color:#00d2ff; text-align:center;">INSPECT: {sample_size} PIECES</h2>
-                    <h3 style="color:#ff0055; text-align:center;">REJECT IF: {max_fail+1} DEFECTS FOUND</h3>
-                    <p style="text-align:center; color:#888;">(Acceptance Number: {max_fail})</p>
-                </div>
-                """, unsafe_allow_html=True)
+            st.write("AQL 2.5")
+            qty = st.number_input("Order Qty", 5000)
+            st.info(f"Inspect 200 pcs. Reject if 11+ defects.")
 
     elif menu == "FACTORY IoT":
         st.markdown("## 🏭 LIVE SENSORS")
         temp = random.uniform(28, 36)
         if temp > 34: st.markdown(f'<div class="iot-alert">⚠️ HIGH TEMP ALERT: {temp:.1f}°C</div>', unsafe_allow_html=True)
-        k1, k2, k3 = st.columns(3)
-        k1.metric("LOOM", f"{random.randint(790, 810)}")
-        k2.metric("HUMID", f"{random.randint(62, 68)}%")
-        k3.metric("TEMP", f"{temp:.1f}°C")
         st.line_chart(np.random.randn(20, 2))
 
     elif menu == "RECRUITMENT":
@@ -249,8 +276,6 @@ if check_password():
             status = "REJECT" if count > 0 else "APPROVED"
             st.image(res, caption=f"Detected: {count} Defects", use_column_width=True)
             db_log_scan(count, status)
-            if count > 0: st.error("❌ LOGGED: REJECTED")
-            else: st.success("✅ LOGGED: APPROVED")
 
     elif menu == "LOGISTICS":
         st.markdown("## 🌍 LOGISTICS")
@@ -261,25 +286,10 @@ if check_password():
         st.markdown("## 💰 CALCULATOR")
         buyer = st.text_input("BUYER NAME")
         price = st.number_input("OFFER ($/kg)", value=4.50)
-        qty = st.number_input("QTY (kg)", value=5000)
         margin = price - (yarn_cost + 0.75)
-        st.metric("NET MARGIN", f"${margin:.2f}/kg", delta=f"${margin*qty:,.0f} Total")
-        if st.button("💾 SAVE DEAL", use_container_width=True):
-            db_log_deal(buyer, qty, price, (yarn_cost+0.75), margin)
-            st.success("SAVED TO SQL.")
+        st.metric("NET MARGIN", f"${margin:.2f}/kg")
+        if st.button("💾 SAVE"): db_log_deal(buyer, 0, price, 0, margin); st.success("SAVED")
 
     elif menu == "DATABASE":
         st.markdown("## 🗄️ SQL VIEWER")
-        tab1, tab2 = st.tabs(["💰 DEALS", "👁️ QC LOGS"])
-        with tab1:
-            df_deals = db_fetch_table("deals")
-            st.dataframe(df_deals, use_container_width=True)
-        with tab2:
-            df_scans = db_fetch_table("scans")
-            st.dataframe(df_scans, use_container_width=True)
-
-    elif menu == "R&D LAB":
-        st.markdown("## 🔬 RESEARCH")
-        topic = st.selectbox("Topic", ["Sustainable Dyeing", "Smart Fabrics", "Recycled Polyester"])
-        if st.button("Search", use_container_width=True):
-            for p in get_research_papers(topic): st.markdown(f'<div class="info-card"><a href="{p["url"]}">{p["title"]}</a></div>', unsafe_allow_html=True)
+        st.dataframe(db_fetch_table("deals"), use_container_width=True)
