@@ -20,44 +20,106 @@ from scipy import signal
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="ROTex // PREDATOR v22.1",
+    page_title="ROTex // ONYX",
     layout="wide",
     page_icon="💠",
     initial_sidebar_state="collapsed"
 )
 
-# --- 🎨 THE "APEX" THEME ---
+# --- 🎨 THE "ONYX GLASS" THEME (WEBFLOW STYLE) ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Rajdhani:wght@500;700&display=swap');
     
-    .stApp { background: linear-gradient(-45deg, #000000, #0a0a0a, #1a0b2e, #000000); background-size: 400% 400%; animation: gradient 15s ease infinite; font-family: 'Rajdhani', sans-serif; color: #e0e0e0; }
-    @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    /* 1. THE LIVING BACKGROUND */
+    .stApp {
+        background: radial-gradient(circle at 0% 0%, #1a1a2e 0%, #16213e 50%, #000000 100%);
+        background-attachment: fixed;
+        color: #ffffff;
+        font-family: 'Inter', sans-serif;
+    }
     
-    section[data-testid="stSidebar"] { background-color: rgba(0, 0, 0, 0.9); border-right: 1px solid #333; backdrop-filter: blur(15px); }
+    /* 2. SIDEBAR GLASS */
+    section[data-testid="stSidebar"] {
+        background: rgba(10, 10, 15, 0.7);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
     
-    div[data-testid="metric-container"] { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); padding: 15px; border-radius: 12px; border-left: 4px solid #00d2ff; margin-bottom: 10px; }
-    .info-card { background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.05); }
+    /* 3. BENTO GRID CARDS (The Webflow Look) */
+    div[data-testid="metric-container"], .info-card, .job-card, .skunk-card, .target-card, .target-safe {
+        background: rgba(255, 255, 255, 0.03); /* Ultra subtle white tint */
+        backdrop-filter: blur(12px);            /* The Frost Effect */
+        border: 1px solid rgba(255, 255, 255, 0.08); /* Thin sleek border */
+        border-radius: 16px;                    /* Soft corners */
+        padding: 20px;
+        transition: all 0.3s ease;              /* Smooth animation */
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
     
-    /* SNIPER TARGET CARDS */
-    .target-card { background: rgba(255, 0, 0, 0.1); border: 1px solid #ff0000; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
-    .target-safe { background: rgba(0, 255, 0, 0.1); border: 1px solid #00ff00; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
+    /* HOVER EFFECT (Lift) */
+    div[data-testid="metric-container"]:hover, .info-card:hover, .job-card:hover, .skunk-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
     
-    .skunk-card { background: rgba(138, 43, 226, 0.1); border: 1px solid #8a2be2; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; box-shadow: 0 0 20px rgba(138, 43, 226, 0.2); }
-    .skunk-title { color: #d68bfb; font-family: 'Rajdhani'; font-weight: 800; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
+    /* 4. TYPOGRAPHY UPDATES */
+    h1, h2, h3 {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        letter-spacing: 1px;
+        background: -webkit-linear-gradient(0deg, #ffffff, #a0a0a0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
     
-    .rotex-logo-container { text-align: center; margin-bottom: 20px; }
-    .rotex-text { font-family: 'Rajdhani', sans-serif; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; }
-    .ro-cyan { color: #00d2ff; text-shadow: 0 0 25px rgba(0, 210, 255, 0.6); }
-    .tex-magenta { color: #ff0055; text-shadow: 0 0 25px rgba(255, 0, 85, 0.6); }
+    /* 5. LOGO STYLING */
+    .rotex-logo-container { text-align: center; margin-bottom: 30px; }
+    .rotex-text { 
+        font-family: 'Rajdhani', sans-serif; 
+        font-weight: 800; 
+        letter-spacing: 6px; 
+        text-transform: uppercase; 
+        font-size: 42px;
+        background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .rotex-tagline { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 10px; 
+        letter-spacing: 3px; 
+        color: #666; 
+        margin-top: 5px; 
+        text-transform: uppercase;
+    }
+
+    /* 6. SPECIFIC COMPONENT STYLES */
+    .skunk-title { color: #d68bfb; font-weight: 800; font-size: 18px; letter-spacing: 1px; margin-bottom: 5px; }
     
-    .login-box { background: rgba(14, 17, 23, 0.9); border: 1px solid #333; padding: 40px; border-radius: 15px; text-align: center; border-top: 2px solid #00d2ff; border-bottom: 2px solid #ff0055; max-width: 500px; margin: auto; }
-    .iot-alert { background-color: rgba(255, 0, 85, 0.1); border: 1px solid #ff0055; color: #ff0055; padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; margin-bottom: 10px; animation: pulse 2s infinite; }
+    /* Target Lock Specifics */
+    .target-card { border-left: 4px solid #ff4b4b !important; }
+    .target-safe { border-left: 4px solid #00d2ff !important; }
     
+    /* Login Box */
+    .login-box { 
+        background: rgba(0, 0, 0, 0.6); 
+        backdrop-filter: blur(20px); 
+        border: 1px solid rgba(255,255,255,0.1); 
+        padding: 50px; 
+        border-radius: 24px; 
+        text-align: center; 
+        max-width: 450px; 
+        margin: auto; 
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    
+    /* Mobile Adjustments */
     @media only screen and (max-width: 600px) {
-        .rotex-text { font-size: 40px !important; }
-        .login-box { padding: 20px !important; width: 90% !important; margin-top: 20px !important; }
-        .stApp { animation: none; background: #0a0a0a; }
+        .rotex-text { font-size: 32px !important; }
+        .login-box { padding: 30px !important; width: 90% !important; margin-top: 20px !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -91,10 +153,10 @@ def check_password():
             del st.session_state["password"]
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown('<div class="login-box"><div class="rotex-logo-container"><span class="rotex-text ro-cyan" style="font-size: 60px;">RO</span><span class="rotex-text tex-magenta" style="font-size: 60px;">Tex</span><br><div class="rotex-tagline">SECURE GATEWAY</div></div></div>', unsafe_allow_html=True)
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Onyx System v23.0</div></div></div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
-        with col2: st.text_input("ENTER ACCESS CODE", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="ENTER KEY...")
+        with col2: st.text_input("ACCESS KEY", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Key...")
         return False
     return st.session_state["password_correct"]
 
@@ -140,7 +202,6 @@ def create_pdf_report(yarn, cotton, gas, news, df_hist):
     pdf.image('temp.png', x=10, w=190)
     return pdf.output(dest='S').encode('latin-1')
 
-# --- 🚀 EXTREME FEATURES LOGIC ---
 def generate_qr(data):
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(data)
@@ -161,7 +222,7 @@ def generate_noise_pattern():
 # --- 🚀 LAUNCH ---
 if check_password():
     with st.sidebar:
-        st.markdown('<div class="rotex-logo-container"><span class="rotex-text ro-cyan" style="font-size: 36px;">RO</span><span class="rotex-text tex-magenta" style="font-size: 36px;">Tex</span><br><div class="rotex-tagline">PREDATOR v22.1</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Onyx Glass v23.0</div></div>', unsafe_allow_html=True)
         menu = st.radio("MODULES", ["WAR ROOM", "TARGET LOCK", "SKUNKWORKS (R&D)", "LABORATORY", "FACTORY IoT", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "DATABASE"])
         st.divider()
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
@@ -170,132 +231,94 @@ if check_password():
     yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
 
     if menu == "WAR ROOM":
-        st.markdown("## 📡 MARKET COMMAND")
+        st.markdown("## 📡 Market Command")
         c1, c2, c3 = st.columns(3)
-        c1.metric("YARN", f"${yarn_cost:.2f}")
-        c2.metric("COTTON", f"${df['Cotton_USD'].iloc[-1]:.2f}")
-        c3.metric("GAS", f"${df['Gas_USD'].iloc[-1]:.2f}")
+        c1.metric("Yarn Fair Value", f"${yarn_cost:.2f}", "+1.2%")
+        c2.metric("Cotton (NYMEX)", f"${df['Cotton_USD'].iloc[-1]:.2f}", "-0.5%")
+        c3.metric("Gas (Henry Hub)", f"${df['Gas_USD'].iloc[-1]:.2f}", "+0.1%")
+        
         pdf = create_pdf_report(yarn_cost, df['Cotton_USD'].iloc[-1], df['Gas_USD'].iloc[-1], [], df)
-        st.download_button("📄 DOWNLOAD REPORT", pdf, "ROTex_Report.pdf", "application/pdf", use_container_width=True)
-        fig = go.Figure(); fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], line=dict(color='#00d2ff', width=3)))
+        st.download_button("📄 Download Intelligence Report", pdf, "ROTex_Report.pdf", "application/pdf", use_container_width=True)
+        
+        fig = go.Figure(); fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], line=dict(color='#3a7bd5', width=3)))
         fig.update_layout(height=350, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=20,b=20))
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown("### 🚨 INTEL FEED")
+        
+        st.markdown("### 🚨 Global Intel")
         for item in get_news_stealth(): 
-            st.markdown(f'<div class="info-card"><a href="{item.link}" target="_blank">➤ {item.title}</a></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="info-card"><a href="{item.link}" target="_blank" style="text-decoration:none; color:white;">➤ {item.title}</a></div>', unsafe_allow_html=True)
 
-    # --- 🎯 TARGET LOCK (COMPETITIVE INTEL) ---
     elif menu == "TARGET LOCK":
-        st.markdown("## 🎯 GLOBAL PRICE SNIPER")
-        st.write("Real-time competitor simulation based on labor & raw material arbitrage.")
-        
+        st.markdown("## 🎯 Global Price Sniper")
+        st.write("Real-time competitor simulation.")
         col_in, col_res = st.columns([1, 2])
-        
         with col_in:
-            st.markdown("### ⚙️ PARAMETERS")
-            fabric = st.selectbox("FABRIC TYPE", ["100% Cotton Single Jersey", "CVC Fleece", "Polyester Sport Mesh"])
-            my_price = st.number_input("YOUR QUOTE ($/kg)", value=4.50, step=0.05)
-            
+            st.markdown("### ⚙️ Parameters")
+            fabric = st.selectbox("Fabric Type", ["100% Cotton Single Jersey", "CVC Fleece", "Polyester Sport Mesh"])
+            my_price = st.number_input("Your Quote ($/kg)", value=4.50, step=0.05)
         with col_res:
-            st.markdown("### 🌏 RIVAL ANALYSIS")
-            
-            # --- 🛠️ BUG FIX: DYNAMIC PRICING LOGIC ---
+            st.markdown("### 🌏 Rival Analysis")
             if fabric == "100% Cotton Single Jersey":
-                raw_material_factor = 1.0 # Standard
-                processing_add = 0.50
+                raw_material_factor = 1.0; processing_add = 0.50
             elif fabric == "CVC Fleece":
-                raw_material_factor = 0.90 # CVC is cheaper yarn
-                processing_add = 0.90 # But expensive knitting (heavier)
+                raw_material_factor = 0.90; processing_add = 0.90
             elif fabric == "Polyester Sport Mesh":
-                raw_material_factor = 0.60 # Poly is much cheaper
-                processing_add = 0.40 # Easy to knit
+                raw_material_factor = 0.60; processing_add = 0.40
             
-            # Calculate Base for chosen fabric
             base_price = (yarn_cost * raw_material_factor) + processing_add
+            china_p = base_price * 0.94; india_p = base_price * 0.96; vietnam_p = base_price * 0.98
             
-            china_p = base_price * 0.94 # China Subsidy
-            india_p = base_price * 0.96 # India Cotton Advantage
-            vietnam_p = base_price * 0.98 # Vietnam Trade Deal
-            
-            # Display Cards
             c1, c2, c3 = st.columns(3)
-            
-            # China Logic
-            delta_cn = my_price - china_p
-            color_cn = "target-card" if delta_cn > 0 else "target-safe"
-            icon_cn = "⚠️ LOSING" if delta_cn > 0 else "✅ WINNING"
+            delta_cn = my_price - china_p; color_cn = "target-card" if delta_cn > 0 else "target-safe"; icon_cn = "⚠️ LOSING" if delta_cn > 0 else "✅ WINNING"
             c1.markdown(f'<div class="{color_cn}"><b>🇨🇳 CHINA</b><br>Target: ${china_p:.2f}<br>{icon_cn}</div>', unsafe_allow_html=True)
             
-            # India Logic
-            delta_in = my_price - india_p
-            color_in = "target-card" if delta_in > 0 else "target-safe"
-            icon_in = "⚠️ LOSING" if delta_in > 0 else "✅ WINNING"
+            delta_in = my_price - india_p; color_in = "target-card" if delta_in > 0 else "target-safe"; icon_in = "⚠️ LOSING" if delta_in > 0 else "✅ WINNING"
             c2.markdown(f'<div class="{color_in}"><b>🇮🇳 INDIA</b><br>Target: ${india_p:.2f}<br>{icon_in}</div>', unsafe_allow_html=True)
 
-            # Vietnam Logic
-            delta_vn = my_price - vietnam_p
-            color_vn = "target-card" if delta_vn > 0 else "target-safe"
-            icon_vn = "⚠️ LOSING" if delta_vn > 0 else "✅ WINNING"
+            delta_vn = my_price - vietnam_p; color_vn = "target-card" if delta_vn > 0 else "target-safe"; icon_vn = "⚠️ LOSING" if delta_vn > 0 else "✅ WINNING"
             c3.markdown(f'<div class="{color_vn}"><b>🇻🇳 VIETNAM</b><br>Target: ${vietnam_p:.2f}<br>{icon_vn}</div>', unsafe_allow_html=True)
             
-            # Strategic Advice
             st.divider()
             lowest_rival = min(china_p, india_p, vietnam_p)
             if my_price > lowest_rival:
-                target_cut = my_price - lowest_rival
-                st.error(f"🚨 TACTICAL ALERT: You are overpriced by ${target_cut:.2f}/kg against the lowest bidder ({fabric}).")
+                st.error(f"🚨 TACTICAL ALERT: You are overpriced by ${my_price - lowest_rival:.2f}/kg.")
             else:
-                st.success(f"🛡️ MARKET DOMINANCE: Your price is competitive for {fabric}.")
+                st.success(f"🛡️ MARKET DOMINANCE: Your price is competitive.")
 
     elif menu == "SKUNKWORKS (R&D)":
-        st.markdown("## 👽 FUTURE TECH DIVISION")
-        tab_fut1, tab_fut2, tab_fut3 = st.tabs(["🔊 LOOM WHISPERER", "🧬 DIGITAL PASSPORT", "🎨 ALGO-WEAVER"])
-        
+        st.markdown("## 👽 Future Tech Division")
+        tab_fut1, tab_fut2, tab_fut3 = st.tabs(["🔊 Loom Whisperer", "🧬 Digital Passport", "🎨 Algo-Weaver"])
         with tab_fut1:
-            st.markdown('<div class="skunk-card"><div class="skunk-title">ACOUSTIC MACHINE DIAGNOSTICS</div><p>Fast Fourier Transform (FFT) analysis of motor frequencies.</p></div>', unsafe_allow_html=True)
+            st.markdown('<div class="skunk-card"><div class="skunk-title">ACOUSTIC DIAGNOSTICS</div><p>FFT Spectrum Analysis</p></div>', unsafe_allow_html=True)
             if st.button("RUN SIMULATION"):
-                st.write("Simulating Motor Sound Waveform...")
+                st.write("Simulating Waveform...")
                 fs = 10e3; N = 1e5; amp = 2*np.sqrt(2); freq = 1234.0; noise_power = 0.001 * fs / 2
                 time_s = np.arange(N) / fs
                 x = amp*np.sin(2*np.pi*freq*time_s) + np.random.normal(scale=np.sqrt(noise_power), size=time_s.shape)
                 f, t, Sxx = signal.spectrogram(x, fs)
                 fig, ax = plt.subplots(figsize=(10, 4))
                 ax.pcolormesh(t, f, Sxx, shading='gouraud', cmap='inferno')
-                ax.set_ylabel('Frequency [Hz]'); ax.set_xlabel('Time [sec]')
-                ax.set_title("SPECTRAL DENSITY ANALYSIS")
+                ax.set_title("SPECTRAL DENSITY")
                 st.pyplot(fig)
-                st.error("⚠️ ANOMALY DETECTED: High Frequency Harmonic at 1.2kHz (Bearing Wear)")
-
+                st.error("⚠️ ANOMALY DETECTED: 1.2kHz Harmonic (Bearing Wear)")
         with tab_fut2:
-            st.markdown('<div class="skunk-card"><div class="skunk-title">DIGITAL PRODUCT PASSPORT</div><p>Blockchain Traceability & QR Generation</p></div>', unsafe_allow_html=True)
-            lot_id = st.text_input("ENTER LOT ID", "LOT-2024-TX-99")
-            origin = st.selectbox("ORIGIN", ["Texas, USA", "Gujarat, India", "Xinjiang, CN"])
+            st.markdown('<div class="skunk-card"><div class="skunk-title">DIGITAL PASSPORT</div><p>Blockchain Traceability</p></div>', unsafe_allow_html=True)
+            lot_id = st.text_input("Lot ID", "LOT-2024-TX-99")
             if st.button("MINT PASSPORT", use_container_width=True):
-                token = f"{lot_id}-{origin}-{random.randint(1000,9999)}".encode('utf-8')
-                import hashlib
-                hash_object = hashlib.sha256(token)
-                hex_dig = hash_object.hexdigest()
+                hex_dig = "0x" + str(random.getrandbits(256))[:20] + "..."
                 c1, c2 = st.columns([2, 1])
-                with c1:
-                    st.code(f"BLOCKCHAIN HASH:\n{hex_dig}", language="json")
-                    st.success("✅ IMMUTABLE RECORD CREATED")
-                with c2:
-                    qr_img = generate_qr(f"ROTex VERIFIED | ID: {lot_id} | HASH: {hex_dig[:10]}...")
-                    buf = BytesIO(); qr_img.save(buf)
-                    st.image(buf, caption="TRACEABILITY QR", use_column_width=True)
-
+                c1.code(f"HASH: {hex_dig}", language="json"); c1.success("✅ IMMUTABLE")
+                qr_img = generate_qr(f"ROTex VERIFIED | ID: {lot_id}"); buf = BytesIO(); qr_img.save(buf)
+                c2.image(buf, caption="TRACEABILITY QR")
         with tab_fut3:
-            st.markdown('<div class="skunk-card"><div class="skunk-title">ALGORITHMIC GENERATIVE DESIGN</div><p>Procedural Pattern Generation using Math (No AI Key Required)</p></div>', unsafe_allow_html=True)
-            if st.button("GENERATE NEW PATTERN", use_container_width=True):
-                pattern = generate_noise_pattern()
-                st.image(pattern, caption=f"Generated Design ID: {random.randint(10000,99999)}", use_column_width=True, channels="BGR")
-                st.caption("Math: Sine Wave Interference + Perlin Noise Emulation")
+            st.markdown('<div class="skunk-card"><div class="skunk-title">GENERATIVE DESIGN</div><p>Procedural Algorithms</p></div>', unsafe_allow_html=True)
+            if st.button("GENERATE", use_container_width=True):
+                st.image(generate_noise_pattern(), caption=f"Design ID: {random.randint(10000,99999)}", use_column_width=True, channels="BGR")
 
     elif menu == "LABORATORY":
-        st.markdown("## 🧪 QUALITY CONTROL LAB")
-        test_mode = st.tabs(["⚖️ GSM MASTER", "📉 SHRINKAGE", "👮 AQL INSPECTOR"])
+        st.markdown("## 🧪 Quality Control")
+        test_mode = st.tabs(["⚖️ GSM", "📉 Shrinkage", "👮 AQL"])
         with test_mode[0]:
-            st.write("Calculate Fabric Weight")
             c1, c2 = st.columns(2)
             weight = c1.number_input("Sample Weight (g)", 2.50)
             area = c2.selectbox("Size", ["100 cm²", "A4"])
@@ -303,46 +326,43 @@ if check_password():
                 gsm = weight * 100 if area == "100 cm²" else weight * 16
                 st.metric("RESULT", f"{gsm:.1f} g/m²")
         with test_mode[1]:
-            st.write("Shrinkage Test")
             if st.button("RUN TEST", use_container_width=True): st.error("❌ FAIL: -6.0% (Exceeds 5%)")
         with test_mode[2]:
-            st.write("AQL 2.5")
             qty = st.number_input("Order Qty", 5000)
             st.info(f"Inspect 200 pcs. Reject if 11+ defects.")
 
     elif menu == "FACTORY IoT":
-        st.markdown("## 🏭 LIVE SENSORS")
+        st.markdown("## 🏭 Live Telemetry")
         temp = random.uniform(28, 36)
-        if temp > 34: st.markdown(f'<div class="iot-alert">⚠️ HIGH TEMP ALERT: {temp:.1f}°C</div>', unsafe_allow_html=True)
+        if temp > 34: st.markdown(f'<div class="target-card">⚠️ HIGH TEMP: {temp:.1f}°C</div>', unsafe_allow_html=True)
         st.line_chart(np.random.randn(20, 2))
 
     elif menu == "RECRUITMENT":
-        st.markdown("## 🤝 RECRUITMENT")
+        st.markdown("## 🤝 Industry Jobs")
         for job in get_jobs_stealth():
-            st.markdown(f'<div class="job-card"><h4>{job.title}</h4><a href="{job.link}" target="_blank">VIEW CIRCULAR</a></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="job-card"><h4>{job.title}</h4><a href="{job.link}" target="_blank" style="color:white;">View Circular</a></div>', unsafe_allow_html=True)
 
     elif menu == "VISION AI":
-        st.markdown("## 👁️ DEFECT SCANNER")
+        st.markdown("## 👁️ Defect Scanner")
         up = st.file_uploader("Upload Fabric")
         if up:
             res, count = process_fabric_image(up)
-            status = "REJECT" if count > 0 else "APPROVED"
             st.image(res, caption=f"Detected: {count} Defects", use_column_width=True)
-            db_log_scan(count, status)
+            db_log_scan(count, "REJECT" if count>0 else "OK")
 
     elif menu == "LOGISTICS":
-        st.markdown("## 🌍 LOGISTICS")
-        target = [91.8, 22.3]; arc = [{"source": [-99.9, 31.9], "target": target, "color": [0, 229, 255]}]
+        st.markdown("## 🌍 Supply Chain")
+        target = [91.8, 22.3]; arc = [{"source": [-99.9, 31.9], "target": target, "color": [58, 123, 213]}]
         st.pydeck_chart(pdk.Deck(layers=[pdk.Layer("ArcLayer", data=arc, get_source_position="source", get_target_position="target", get_width=5, get_source_color="color", get_target_color="color")], initial_view_state=pdk.ViewState(latitude=20, longitude=60, zoom=0, pitch=45), map_style="mapbox://styles/mapbox/dark-v10"))
 
     elif menu == "DEAL BREAKER":
-        st.markdown("## 💰 CALCULATOR")
-        buyer = st.text_input("BUYER NAME")
-        price = st.number_input("OFFER ($/kg)", value=4.50)
+        st.markdown("## 💰 Margin Calculator")
+        buyer = st.text_input("Buyer Name")
+        price = st.number_input("Offer ($/kg)", value=4.50)
         margin = price - (yarn_cost + 0.75)
-        st.metric("NET MARGIN", f"${margin:.2f}/kg")
-        if st.button("💾 SAVE"): db_log_deal(buyer, 0, price, 0, margin); st.success("SAVED")
+        st.metric("Net Margin", f"${margin:.2f}/kg")
+        if st.button("💾 SAVE TO LEDGER", use_container_width=True): db_log_deal(buyer, 0, price, 0, margin); st.success("Saved.")
 
     elif menu == "DATABASE":
-        st.markdown("## 🗄️ SQL VIEWER")
+        st.markdown("## 🗄️ SQL Ledger")
         st.dataframe(db_fetch_table("deals"), use_container_width=True)
