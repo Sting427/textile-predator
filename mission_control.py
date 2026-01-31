@@ -116,7 +116,7 @@ def check_password():
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Singularity v25.0</div></div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">Singularity v25.1</div></div></div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2: st.text_input("IDENTITY VERIFICATION", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Key...")
         return False
@@ -200,13 +200,22 @@ if check_password():
         st.markdown(f"<div style='background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; white-space:nowrap; overflow:hidden; color:#00ff88; font-family:monospace;'>LIVE FEED: COTTON: ${df['Cotton_USD'].iloc[-1]:.2f} ▲ | GAS: ${df['Gas_USD'].iloc[-1]:.2f} ▼ | YARN FAIR VALUE: ${yarn_cost:.2f} ▲ | SHANGHAI FUTURES: UP 2.1% | CHITTAGONG PORT: CONGESTION LOW</div>", unsafe_allow_html=True)
         st.write("")
 
+        # Metrics Row
         c1, c2, c3 = st.columns(3)
         c1.metric("Yarn Index", f"${yarn_cost:.2f}", "+1.2%")
         c2.metric("Cotton Futures", f"${df['Cotton_USD'].iloc[-1]:.2f}", "-0.5%")
         c3.metric("Energy Index", f"${df['Gas_USD'].iloc[-1]:.2f}", "+0.1%")
         
-        col_main, col_intel = st.columns([2, 1])
-        with col_main:
+        # --- RESTORED GRAPH (Full Width) ---
+        st.markdown("### 📈 Market Trend Analysis")
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], line=dict(color='#00d2ff', width=3), name='Yarn Index'))
+        fig.update_layout(height=350, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=20,b=20))
+        st.plotly_chart(fig, use_container_width=True)
+
+        # --- LOWER DECK: MAP & SENTIMENT ---
+        col_map, col_intel = st.columns([2, 1])
+        with col_map:
             # Geopolitical Heatmap (Simulated)
             st.markdown("### 🗺️ Geopolitical Threat Map")
             map_data = pd.DataFrame({'lat': [23.8, 31.2, 21.0, 39.9], 'lon': [90.4, 121.4, 105.8, 116.4], 'risk': [10, 50, 30, 80]})
