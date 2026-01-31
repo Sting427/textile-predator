@@ -18,68 +18,53 @@ from datetime import datetime
 
 # --- 🌑 PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="ROTex // MOBILE READY",
+    page_title="ROTex // LAB SYSTEM",
     layout="wide",
     page_icon="💠",
-    initial_sidebar_state="collapsed" # Collapsed by default on mobile for better view
+    initial_sidebar_state="collapsed"
 )
 
-# --- 🎨 THE "RESPONSIVE" THEME ---
+# --- 🎨 THE "APEX" THEME ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700;800&display=swap');
     
-    /* GLOBAL STYLES */
     .stApp { background: linear-gradient(-45deg, #000000, #0a0a0a, #1a0b2e, #000000); background-size: 400% 400%; animation: gradient 15s ease infinite; font-family: 'Rajdhani', sans-serif; color: #e0e0e0; }
     @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
     
-    /* SIDEBAR */
     section[data-testid="stSidebar"] { background-color: rgba(0, 0, 0, 0.9); border-right: 1px solid #333; backdrop-filter: blur(15px); }
     
-    /* CARDS */
     div[data-testid="metric-container"] { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); padding: 15px; border-radius: 12px; border-left: 4px solid #00d2ff; margin-bottom: 10px; }
     .info-card { background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.05); }
     .job-card { background: rgba(0, 255, 136, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(0, 255, 136, 0.1); border-left: 4px solid #00ff88; }
     
-    /* LOGO & TEXT */
     .rotex-logo-container { text-align: center; margin-bottom: 20px; }
     .rotex-text { font-family: 'Rajdhani', sans-serif; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; }
     .ro-cyan { color: #00d2ff; text-shadow: 0 0 25px rgba(0, 210, 255, 0.6); }
     .tex-magenta { color: #ff0055; text-shadow: 0 0 25px rgba(255, 0, 85, 0.6); }
     
-    /* LOGIN BOX (DESKTOP DEFAULT) */
     .login-box { background: rgba(14, 17, 23, 0.9); border: 1px solid #333; padding: 40px; border-radius: 15px; text-align: center; border-top: 2px solid #00d2ff; border-bottom: 2px solid #ff0055; max-width: 500px; margin: auto; }
-
-    /* --- 📱 MOBILE RESPONSIVENESS (THE MAGIC) --- */
+    
+    /* LAB RESULT BOXES */
+    .lab-pass { background-color: rgba(0, 255, 0, 0.1); border: 1px solid #00ff00; padding: 20px; border-radius: 10px; text-align: center; color: #00ff00; font-weight: bold; }
+    .lab-fail { background-color: rgba(255, 0, 0, 0.1); border: 1px solid #ff0000; padding: 20px; border-radius: 10px; text-align: center; color: #ff0000; font-weight: bold; }
+    
     @media only screen and (max-width: 600px) {
-        /* Shrink Login Logo */
-        .rotex-text { font-size: 40px !important; letter-spacing: 2px !important; }
-        .rotex-tagline { font-size: 10px !important; }
-        
-        /* Adjust Login Box Padding */
+        .rotex-text { font-size: 40px !important; }
         .login-box { padding: 20px !important; width: 90% !important; margin-top: 20px !important; }
-        
-        /* Make Charts Scrollable/Fit */
-        .js-plotly-plot { width: 100% !important; }
-        
-        /* Metric Cards Full Width */
-        div[data-testid="metric-container"] { width: 100% !important; margin-bottom: 15px !important; }
-        
-        /* Hide complex background animations on slow phones to save battery */
         .stApp { animation: none; background: #0a0a0a; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🗄️ SQL DATABASE ---
+# --- 🗄️ DATABASE ---
 DB_FILE = "rotex_core.db"
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS deals (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, buyer TEXT, qty REAL, price REAL, cost REAL, margin REAL)''')
     c.execute('''CREATE TABLE IF NOT EXISTS scans (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, defects INTEGER, status TEXT)''')
-    conn.commit()
-    conn.close()
+    conn.commit(); conn.close()
 def db_log_deal(buyer, qty, price, cost, margin):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("INSERT INTO deals (timestamp, buyer, qty, price, cost, margin) VALUES (?, ?, ?, ?, ?, ?)", (datetime.now().strftime("%Y-%m-%d %H:%M"), buyer, qty, price, cost, margin))
@@ -101,17 +86,14 @@ def check_password():
             del st.session_state["password"]
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
-        # Responsive Layout for Login
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('<div class="login-box"><div class="rotex-logo-container"><span class="rotex-text ro-cyan" style="font-size: 60px;">RO</span><span class="rotex-text tex-magenta" style="font-size: 60px;">Tex</span><br><div class="rotex-tagline">SECURE GATEWAY</div></div></div>', unsafe_allow_html=True)
-        # Centered Input
         col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.text_input("ENTER ACCESS CODE", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="ENTER KEY...")
+        with col2: st.text_input("ENTER ACCESS CODE", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="ENTER KEY...")
         return False
     return st.session_state["password_correct"]
 
-# --- 🧠 CORE LOGIC ---
+# --- 🧠 LOGIC ---
 @st.cache_data(ttl=3600)
 def load_market_data():
     try:
@@ -157,37 +139,92 @@ def create_pdf_report(yarn, cotton, gas, news, df_hist):
     pdf.image('temp.png', x=10, w=190)
     return pdf.output(dest='S').encode('latin-1')
 
+# --- 🔬 AQL CALCULATION LOGIC ---
+def calculate_aql(qty):
+    # Simplified Logic based on ISO 2859-1 (General Inspection Level II)
+    if qty <= 150: return 20, 1 # Sample Size, Max Fail
+    elif qty <= 500: return 50, 3
+    elif qty <= 1200: return 80, 5
+    elif qty <= 3200: return 125, 7
+    elif qty <= 10000: return 200, 10
+    elif qty <= 35000: return 315, 14
+    elif qty <= 150000: return 500, 21
+    else: return 800, 21
+
 # --- 🚀 LAUNCH ---
 if check_password():
     with st.sidebar:
-        # Sidebar Logo (Smaller for Sidebar)
         st.markdown('<div class="rotex-logo-container"><span class="rotex-text ro-cyan" style="font-size: 36px;">RO</span><span class="rotex-text tex-magenta" style="font-size: 36px;">Tex</span><br><div class="rotex-tagline">MOBILE UPLINK</div></div>', unsafe_allow_html=True)
-        menu = st.radio("MODULES", ["WAR ROOM", "FACTORY IoT", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "DATABASE", "R&D LAB"])
+        menu = st.radio("MODULES", ["WAR ROOM", "LABORATORY", "FACTORY IoT", "RECRUITMENT", "VISION AI", "LOGISTICS", "DEAL BREAKER", "DATABASE", "R&D LAB"])
         st.divider()
-        if st.button("LOGOUT"):
-            st.session_state["password_correct"] = False
-            st.rerun()
+        if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
 
     df = load_market_data()
     yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
 
     if menu == "WAR ROOM":
         st.markdown("## 📡 MARKET COMMAND")
-        # On Mobile, we stack the metrics. On Desktop, we use columns.
         c1, c2, c3 = st.columns(3)
-        c1.metric("YARN FAIR VALUE", f"${yarn_cost:.2f}")
+        c1.metric("YARN", f"${yarn_cost:.2f}")
         c2.metric("COTTON", f"${df['Cotton_USD'].iloc[-1]:.2f}")
         c3.metric("GAS", f"${df['Gas_USD'].iloc[-1]:.2f}")
-        
         pdf = create_pdf_report(yarn_cost, df['Cotton_USD'].iloc[-1], df['Gas_USD'].iloc[-1], [], df)
         st.download_button("📄 DOWNLOAD REPORT", pdf, "ROTex_Report.pdf", "application/pdf", use_container_width=True)
-        
         fig = go.Figure(); fig.add_trace(go.Scatter(x=df.index, y=df['Yarn_Fair_Value'], line=dict(color='#00d2ff', width=3)))
         fig.update_layout(height=350, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=20,b=20))
         st.plotly_chart(fig, use_container_width=True)
-        
         st.markdown("### 🚨 INTEL FEED")
         for item in get_news_stealth(): st.markdown(f'<div class="info-card"><a href="{item.link}" target="_blank">➤ {item.title}</a></div>', unsafe_allow_html=True)
+
+    # --- 🧪 NEW LABORATORY MODULE ---
+    elif menu == "LABORATORY":
+        st.markdown("## 🧪 QUALITY CONTROL LAB")
+        test_mode = st.tabs(["⚖️ GSM MASTER", "📉 SHRINKAGE", "👮 AQL INSPECTOR"])
+        
+        with test_mode[0]:
+            st.write("Calculate Fabric Weight (GSM) from Sample Cut")
+            c1, c2 = st.columns(2)
+            weight = c1.number_input("Sample Weight (grams)", value=2.50, step=0.01)
+            area = c2.selectbox("Sample Size", ["100 cm² (Standard Circle)", "A4 Size"])
+            if st.button("CALCULATE GSM", use_container_width=True):
+                gsm = weight * 100 if area == "100 cm² (Standard Circle)" else weight * 16
+                st.metric("RESULT GSM", f"{gsm:.1f} g/m²")
+                if gsm < 140: st.info("Category: LIGHTWEIGHT (T-Shirts)")
+                elif gsm < 250: st.info("Category: MEDIUM WEIGHT (Polos/Shirts)")
+                else: st.info("Category: HEAVY WEIGHT (Hoodies/Denim)")
+
+        with test_mode[1]:
+            st.write("Dimensional Stability Test (Max Tolerance: 5%)")
+            l_orig = st.number_input("Length Before Wash (cm)", 50.0)
+            l_wash = st.number_input("Length After Wash (cm)", 48.0)
+            w_orig = st.number_input("Width Before Wash (cm)", 50.0)
+            w_wash = st.number_input("Width After Wash (cm)", 49.0)
+            
+            if st.button("RUN SHRINKAGE TEST", use_container_width=True):
+                shrink_l = ((l_orig - l_wash) / l_orig) * 100
+                shrink_w = ((w_orig - w_wash) / w_orig) * 100
+                
+                c1, c2 = st.columns(2)
+                c1.metric("LENGTH SHRINKAGE", f"-{shrink_l:.1f}%")
+                c2.metric("WIDTH SHRINKAGE", f"-{shrink_w:.1f}%")
+                
+                if shrink_l > 5.0 or shrink_w > 5.0:
+                    st.markdown('<div class="lab-fail">❌ FAIL: EXCEEDS 5% TOLERANCE</div>', unsafe_allow_html=True)
+                else:
+                    st.markdown('<div class="lab-pass">✅ PASS: WITHIN TOLERANCE</div>', unsafe_allow_html=True)
+
+        with test_mode[2]:
+            st.write("ISO 2859-1 Shipment Audit (AQL 2.5 Level II)")
+            lot_qty = st.number_input("Total Order Quantity (pcs)", value=5000)
+            if st.button("GENERATE INSPECTION PLAN", use_container_width=True):
+                sample_size, max_fail = calculate_aql(lot_qty)
+                st.markdown(f"""
+                <div style="border:1px solid #444; padding:20px; border-radius:10px; background:#111;">
+                    <h2 style="color:#00d2ff; text-align:center;">INSPECT: {sample_size} PIECES</h2>
+                    <h3 style="color:#ff0055; text-align:center;">REJECT IF: {max_fail+1} DEFECTS FOUND</h3>
+                    <p style="text-align:center; color:#888;">(Acceptance Number: {max_fail})</p>
+                </div>
+                """, unsafe_allow_html=True)
 
     elif menu == "FACTORY IoT":
         st.markdown("## 🏭 LIVE SENSORS")
