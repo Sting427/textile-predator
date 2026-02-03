@@ -121,23 +121,35 @@ def check_password():
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System v29.0</div></div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System v29.1</div></div></div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2: st.text_input("IDENTITY VERIFICATION", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Key...")
         return False
     return st.session_state["password_correct"]
 
-# --- 🧠 LOGIC & UTILS ---
+# --- 🧠 LOGIC & UTILS (UPDATED WITH FAIL-SAFE) ---
 @st.cache_data(ttl=3600)
 def load_market_data():
     try:
+        # Try to download real data
         data = yf.download(['CT=F', 'NG=F'], period="1y", interval="1d", progress=False)['Close']
+        
+        # Check if data is empty (Fixes IndexError)
+        if data.empty:
+            raise ValueError("No data returned")
+            
         data.columns = ['Cotton_USD', 'Gas_USD']
         data['Yarn_Fair_Value'] = ((data['Cotton_USD']/100) * 1.6) + (data['Gas_USD'] * 0.15) + 0.40
         return data.dropna()
-    except:
+        
+    except Exception as e:
+        # Fail-Safe: Generate Synthetic Data if API fails
         dates = pd.date_range(end=pd.Timestamp.today(), periods=100)
-        return pd.DataFrame({'Cotton_USD': 85.0, 'Gas_USD': 3.0, 'Yarn_Fair_Value': 4.10}, index=dates)
+        data = pd.DataFrame(index=dates)
+        data['Cotton_USD'] = np.random.normal(85, 2, 100) # Simulated Cotton around $85
+        data['Gas_USD'] = np.random.normal(3.0, 0.1, 100) # Simulated Gas around $3
+        data['Yarn_Fair_Value'] = ((data['Cotton_USD']/100) * 1.6) + (data['Gas_USD'] * 0.15) + 0.40
+        return data
 
 def get_news_stealth():
     try: return feedparser.parse(requests.get("https://news.google.com/rss/search?q=Bangladesh+Textile+Industry+when:3d&hl=en-BD&gl=BD&ceid=BD:en").content).entries[:4]
