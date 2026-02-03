@@ -44,7 +44,7 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
-    div[data-testid="metric-container"], .info-card, .job-card, .skunk-card, .target-card, .target-safe {
+    div[data-testid="metric-container"], .info-card, .job-card, .skunk-card, .target-card, .target-safe, .guide-card {
         background: rgba(255, 255, 255, 0.02);
         backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.05);
@@ -52,7 +52,7 @@ st.markdown("""
         padding: 20px;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    div[data-testid="metric-container"]:hover, .info-card:hover {
+    div[data-testid="metric-container"]:hover, .info-card:hover, .guide-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 40px rgba(0, 210, 255, 0.15);
         border-color: rgba(0, 210, 255, 0.3);
@@ -118,7 +118,7 @@ def check_password():
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System v26.3</div></div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System v27.0</div></div></div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2: st.text_input("IDENTITY VERIFICATION", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Key...")
         return False
@@ -159,38 +159,26 @@ def process_fabric_image(image_file):
             count += 1
     return output_img, count
 
-# --- 🛡️ TEXT SCRUBBER (Fixes Unicode Error) ---
+# --- 🛡️ TEXT SCRUBBER ---
 def sanitize_text(text):
-    """Removes special characters that crash the PDF generator."""
     if not text: return ""
-    # Encode to ASCII and ignore errors, then decode back to string
     return text.encode('latin-1', 'replace').decode('latin-1')
 
 def create_pdf_report(yarn, cotton, gas, news, df_hist):
     plt.figure(figsize=(10, 4)); plt.plot(df_hist.index, df_hist['Yarn_Fair_Value'], color='#00d2ff'); plt.savefig('temp.png'); plt.close()
-    
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 24)
+    pdf = FPDF(); pdf.add_page(); pdf.set_font("Arial", "B", 24)
     pdf.cell(0, 20, "ROTex EXECUTIVE REPORT", ln=True, align="C")
-    
     pdf.set_font("Arial", "", 12)
     pdf.cell(0, 10, f"Generated: {datetime.now().strftime('%Y-%m-%d')}", ln=True, align="C")
     pdf.ln(10)
-    
     pdf.cell(0, 10, f"Yarn Index: ${yarn:.2f} | Cotton: ${cotton:.2f} | Gas: ${gas:.2f}", ln=True)
     pdf.image('temp.png', x=10, w=190)
     pdf.ln(10)
-    
-    pdf.set_font("Arial", "B", 14)
-    pdf.cell(0, 10, "Market Intel:", ln=True)
-    
+    pdf.set_font("Arial", "B", 14); pdf.cell(0, 10, "Market Intel:", ln=True)
     pdf.set_font("Arial", "", 10)
     for item in news:
-        # 🛡️ USE SANITIZED TEXT TO PREVENT CRASH
         safe_title = sanitize_text(item.title)
         pdf.multi_cell(0, 10, f"- {safe_title}")
-        
     return pdf.output(dest='S').encode('latin-1')
 
 def generate_qr(data):
@@ -224,12 +212,8 @@ if check_password():
     # 1. MARKET INTELLIGENCE
     if menu == "MARKET INTELLIGENCE":
         st.markdown("## 📡 MARKET INTELLIGENCE")
-        
-        # Ticker
         st.markdown(f"<div style='background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; white-space:nowrap; overflow:hidden; color:#00ff88; font-family:monospace;'>LIVE FEED: COTTON: ${df['Cotton_USD'].iloc[-1]:.2f} ▲ | GAS: ${df['Gas_USD'].iloc[-1]:.2f} ▼ | YARN FAIR VALUE: ${yarn_cost:.2f} ▲</div>", unsafe_allow_html=True)
         st.write("")
-
-        # REPORT GENERATOR
         news_items = get_news_stealth()
         col_metrics, col_btn = st.columns([3, 1])
         with col_metrics:
@@ -247,11 +231,9 @@ if check_password():
         fig.update_layout(height=350, template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0,r=0,t=20,b=20))
         st.plotly_chart(fig, use_container_width=True)
 
-        # MAP & INTEL
         col_map, col_intel = st.columns([2, 1])
         with col_map:
             st.markdown("### 🗺️ Geopolitical Risk Tracker")
-            # CHANGED TO SCATTERPLOT FOR TOOLTIPS
             map_data = pd.DataFrame({
                 'lat': [23.8, 31.2, 21.0, 39.9, 25.2],
                 'lon': [90.4, 121.4, 105.8, 116.4, 55.3],
@@ -259,21 +241,9 @@ if check_password():
                 'risk': [10, 50, 30, 80, 20],
                 'color': [[0, 255, 136], [255, 0, 0], [255, 165, 0], [255, 0, 0], [0, 100, 255]]
             })
-            layer = pdk.Layer(
-                "ScatterplotLayer",
-                data=map_data,
-                get_position='[lon, lat]',
-                get_fill_color='color',
-                get_radius=200000,
-                pickable=True
-            )
+            layer = pdk.Layer("ScatterplotLayer", data=map_data, get_position='[lon, lat]', get_fill_color='color', get_radius=200000, pickable=True)
             view_state = pdk.ViewState(latitude=25, longitude=90, zoom=2, pitch=45)
-            st.pydeck_chart(pdk.Deck(
-                layers=[layer], 
-                initial_view_state=view_state, 
-                map_style="mapbox://styles/mapbox/dark-v10",
-                tooltip={"text": "{name}\nRisk Level: {risk}%"}
-            ))
+            st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/dark-v10", tooltip={"text": "{name}\nRisk Level: {risk}%"}))
             st.info("**Strategic Insight:** Hover over nodes to see specific regional threats. Red indicates severe supply chain disruption risks.")
         
         with col_intel:
@@ -290,24 +260,10 @@ if check_password():
             fabric = st.selectbox("Fabric Class", ["Cotton Single Jersey", "CVC Fleece", "Poly Mesh"])
             my_quote = st.number_input("Your Quote ($/kg)", 4.50)
             shock = st.slider("Global Price Shock (%)", -20, 20, 0)
-            
-            with st.expander("❓ HOW IT WORKS"):
-                st.write("Calculates 'Strike Price' of rival nations using live indices + local labor/energy subsidies.")
+            with st.expander("❓ LOGIC BLUEPRINT"):
                 if graphviz_installed:
-                    st.graphviz_chart('''
-                    digraph logic {
-                        rankdir=LR;
-                        node [shape=box, style=filled, fillcolor="#222", fontcolor="white", fontname="Arial"];
-                        edge [color="#00d2ff"];
-                        A [label="Live Yarn"];
-                        B [label="Subsidy"];
-                        C [label="Strike Price"];
-                        A -> C;
-                        B -> C;
-                    }
-                    ''')
-                else:
-                    st.warning("Diagram unavailable (Server missing Graphviz)")
+                    st.graphviz_chart('digraph logic { rankdir=TD; node [shape=box, style=filled, fillcolor="#222", fontcolor="white"]; LiveIndex -> BasePrice; BasePrice -> ChinaSubsidy; BasePrice -> IndiaSubsidy; ChinaSubsidy -> FinalPrice; }')
+                else: st.warning("Diagram unavailable")
 
         with col_sim:
             base = yarn_cost * (1 + shock/100)
@@ -323,7 +279,6 @@ if check_password():
             c1.metric("🇨🇳 China", f"${china:.2f}")
             c2.metric("🇮🇳 India", f"${india:.2f}")
             c3.metric("🇻🇳 Vietnam", f"${vietnam:.2f}")
-            
             st.success(f"**AI Analysis:** You have a {prob}% chance of winning this deal.")
 
     # 3. R&D INNOVATION
@@ -371,10 +326,8 @@ if check_password():
             c3, c4 = st.columns(2)
             w_b = c3.number_input("Width Before (cm)", 50.0)
             w_a = c4.number_input("Width After (cm)", 49.0)
-            
             if st.button("CALCULATE SHRINKAGE"):
-                shrink_l = ((l_b - l_a) / l_b) * 100
-                shrink_w = ((w_b - w_a) / w_b) * 100
+                shrink_l = ((l_b - l_a) / l_b) * 100; shrink_w = ((w_b - w_a) / w_b) * 100
                 col_res1, col_res2 = st.columns(2)
                 col_res1.metric("Length Shrinkage", f"-{shrink_l:.1f}%")
                 col_res2.metric("Width Shrinkage", f"-{shrink_w:.1f}%")
@@ -430,15 +383,55 @@ if check_password():
         st.markdown("## 🗄️ ORDER HISTORY")
         st.dataframe(db_fetch_table("deals"), use_container_width=True)
 
-    # 9. SYSTEM GUIDE
+    # 9. SYSTEM GUIDE (REBUILT)
     elif menu == "SYSTEM GUIDE":
         st.markdown("## 🎓 ROTex SYSTEM GUIDE")
-        guide1, guide2 = st.tabs(["Command Center", "Pricing Logic"])
-        with guide1:
-            st.info("Market Intelligence aggregates live financial data.")
+        
+        tab_guide1, tab_guide2, tab_guide3, tab_guide4 = st.tabs(["Market Logic", "Quality Standards", "R&D Blueprints", "Training Video"])
+        
+        with tab_guide1:
+            st.markdown('<div class="guide-card"><h3>📈 HOW PRICING WORKS</h3><p>The system uses a <b>Reverse-Costing Algorithm</b> to determine the theoretical floor price of competitors.</p></div>', unsafe_allow_html=True)
             if graphviz_installed:
-                st.graphviz_chart('digraph G { rankdir=LR; node [shape=box]; A[label="Data"] -> B[label="Intel"]; }')
-            else:
-                st.warning("Diagram unavailable.")
-        with guide2:
-            st.info("Competitor Pricing uses 'Geopolitical Arbitrage'.")
+                st.graphviz_chart('''
+                digraph G {
+                    rankdir=LR;
+                    node [shape=box, style=filled, fillcolor="#222", fontcolor="white", fontname="Arial"];
+                    edge [color="#00d2ff"];
+                    A [label="Live Cotton (NYMEX)"];
+                    B [label="Live Gas (Henry Hub)"];
+                    C [label="Processing Cost"];
+                    D [label="FINAL YARN COST"];
+                    A -> D;
+                    B -> D;
+                    C -> D;
+                }
+                ''')
+            else: st.warning("Schematic unavailable.")
+
+        with tab_guide2:
+            st.markdown('<div class="guide-card"><h3>🧪 QUALITY PROTOCOLS (ISO 6330)</h3><p>Standard tolerance levels used in the Quality Lab.</p></div>', unsafe_allow_html=True)
+            col_g1, col_g2 = st.columns(2)
+            col_g1.info("**GSM Tolerance:** ±5%\n- Under 130: Reject (Sheer)\n- 140-160: Standard\n- 180+: Heavy")
+            col_g2.info("**Shrinkage Tolerance:** ±5%\n- Length: Max -5%\n- Width: Max -5%\n- Spirality: Max 4%")
+
+        with tab_guide3:
+            st.markdown('<div class="guide-card"><h3>👽 ALIEN TECH BLUEPRINTS</h3><p>The math behind the "Loom Whisperer" acoustic scanner.</p></div>', unsafe_allow_html=True)
+            if graphviz_installed:
+                st.graphviz_chart('''
+                digraph G {
+                    rankdir=TD;
+                    node [shape=box, style=filled, fillcolor="#222", fontcolor="white"];
+                    edge [color="#ff0055"];
+                    Mic [label="Microphone Input"];
+                    FFT [label="Fast Fourier Transform"];
+                    Freq [label="Frequency Domain"];
+                    AI [label="Anomaly Detection"];
+                    Alert [label="BEARING FAILURE"];
+                    Mic -> FFT -> Freq -> AI -> Alert;
+                }
+                ''')
+
+        with tab_guide4:
+             st.markdown('<div class="guide-card"><h3>🎥 OPERATOR TRAINING</h3></div>', unsafe_allow_html=True)
+             st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ") # Placeholder Video
+             st.caption("Module 1: System Calibration & Maintenance")
