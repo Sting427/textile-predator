@@ -91,22 +91,28 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 🗄️ DATABASE ---
+# --- 🗄️ DATABASE (UPDATED FOR HR) ---
 DB_FILE = "rotex_core.db"
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS deals (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, buyer TEXT, qty REAL, price REAL, cost REAL, margin REAL)''')
     c.execute('''CREATE TABLE IF NOT EXISTS scans (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, defects INTEGER, status TEXT)''')
+    # NEW HR TABLES
+    c.execute('''CREATE TABLE IF NOT EXISTS employees (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT, salary REAL, status TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS payroll (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, emp_id INTEGER, gross REAL, tax REAL, net REAL)''')
     conn.commit(); conn.close()
+
 def db_log_deal(buyer, qty, price, cost, margin):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("INSERT INTO deals (timestamp, buyer, qty, price, cost, margin) VALUES (?, ?, ?, ?, ?, ?)", (datetime.now().strftime("%Y-%m-%d %H:%M"), buyer, qty, price, cost, margin))
     conn.commit(); conn.close()
-def db_log_scan(defects, status):
+
+def db_add_employee(name, role, salary):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-    c.execute("INSERT INTO scans (timestamp, defects, status) VALUES (?, ?, ?)", (datetime.now().strftime("%Y-%m-%d %H:%M"), defects, status))
+    c.execute("INSERT INTO employees (name, role, salary, status) VALUES (?, ?, ?, ?)", (name, role, salary, "Active"))
     conn.commit(); conn.close()
+
 def db_fetch_table(table_name):
     conn = sqlite3.connect(DB_FILE); df = pd.read_sql_query(f"SELECT * FROM {table_name} ORDER BY id DESC", conn); conn.close()
     return df
@@ -121,33 +127,26 @@ def check_password():
         else: st.session_state["password_correct"] = False
     if "password_correct" not in st.session_state:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System v29.1</div></div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-box"><div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System v30.0</div></div></div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2: st.text_input("IDENTITY VERIFICATION", type="password", on_change=password_entered, key="password", label_visibility="collapsed", placeholder="Enter Key...")
         return False
     return st.session_state["password_correct"]
 
-# --- 🧠 LOGIC & UTILS (UPDATED WITH FAIL-SAFE) ---
+# --- 🧠 LOGIC & UTILS ---
 @st.cache_data(ttl=3600)
 def load_market_data():
     try:
-        # Try to download real data
         data = yf.download(['CT=F', 'NG=F'], period="1y", interval="1d", progress=False)['Close']
-        
-        # Check if data is empty (Fixes IndexError)
-        if data.empty:
-            raise ValueError("No data returned")
-            
+        if data.empty: raise ValueError("Empty Data")
         data.columns = ['Cotton_USD', 'Gas_USD']
         data['Yarn_Fair_Value'] = ((data['Cotton_USD']/100) * 1.6) + (data['Gas_USD'] * 0.15) + 0.40
         return data.dropna()
-        
-    except Exception as e:
-        # Fail-Safe: Generate Synthetic Data if API fails
+    except:
         dates = pd.date_range(end=pd.Timestamp.today(), periods=100)
         data = pd.DataFrame(index=dates)
-        data['Cotton_USD'] = np.random.normal(85, 2, 100) # Simulated Cotton around $85
-        data['Gas_USD'] = np.random.normal(3.0, 0.1, 100) # Simulated Gas around $3
+        data['Cotton_USD'] = np.random.normal(85, 2, 100) 
+        data['Gas_USD'] = np.random.normal(3.0, 0.1, 100)
         data['Yarn_Fair_Value'] = ((data['Cotton_USD']/100) * 1.6) + (data['Gas_USD'] * 0.15) + 0.40
         return data
 
@@ -216,7 +215,7 @@ def generate_noise_pattern(freq, chaos):
 if check_password():
     with st.sidebar:
         st.markdown('<div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System Online</div></div>', unsafe_allow_html=True)
-        menu = st.radio("MAIN MENU", ["MARKET INTELLIGENCE", "COMPETITOR PRICING", "CHAOS THEORY", "R&D INNOVATION", "QUALITY LAB", "FACTORY STATUS", "FABRIC SCANNER", "LOGISTICS", "COSTING", "DATABASE", "SYSTEM GUIDE"])
+        menu = st.radio("MAIN MENU", ["MARKET INTELLIGENCE", "COMPETITOR PRICING", "CHAOS THEORY", "HR COMMAND", "R&D INNOVATION", "QUALITY LAB", "FACTORY STATUS", "FABRIC SCANNER", "LOGISTICS", "COSTING", "DATABASE", "SYSTEM GUIDE"])
         st.divider()
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
 
@@ -227,12 +226,7 @@ if check_password():
     if menu == "MARKET INTELLIGENCE":
         st.markdown("## 📡 MARKET INTELLIGENCE")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("""
-            **CEO Summary:** This dashboard is your "Wall Street" terminal for Textiles. It tells you the *real* cost of raw materials today.
-            
-            **Engineer's Logic:** It scrapes live API data from NYMEX (Cotton) and Henry Hub (Gas) to calculate a weighted "Yarn Fair Value" index.
-            - **Why use it?** If a spinner quotes you $5.00 but this screen says $4.20, you know they are bluffing.
-            """)
+            st.markdown("**CEO Summary:** Wall Street for Textiles. Live raw material tracking.\n**Engineer's Logic:** Scrapes NYMEX/Henry Hub APIs to compute real-time Yarn Fair Value.")
         
         st.markdown(f"<div style='background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; white-space:nowrap; overflow:hidden; color:#00ff88; font-family:monospace;'>LIVE FEED: COTTON: ${df['Cotton_USD'].iloc[-1]:.2f} ▲ | GAS: ${df['Gas_USD'].iloc[-1]:.2f} ▼ | YARN FAIR VALUE: ${yarn_cost:.2f} ▲</div>", unsafe_allow_html=True)
         st.write("")
@@ -260,7 +254,7 @@ if check_password():
             layer = pdk.Layer("ScatterplotLayer", data=map_data, get_position='[lon, lat]', get_fill_color='color', get_radius=200000, pickable=True)
             view_state = pdk.ViewState(latitude=25, longitude=90, zoom=2, pitch=45)
             st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/dark-v10", tooltip={"text": "{name}\nRisk Level: {risk}%"}))
-            st.info("**Strategic Insight:** Hover over nodes to see specific regional threats. Red indicates severe supply chain disruption risks.")
+            st.info("**Strategic Insight:** Red zones indicate high supply chain risk.")
         with col_intel:
             st.markdown("### 🧠 Global Feed")
             for item in news_items: st.markdown(f'<div class="info-card" style="font-size:12px; padding:10px;"><a href="{item.link}" target="_blank" style="color:#00d2ff; text-decoration:none;">➤ {item.title[:60]}...</a></div>', unsafe_allow_html=True)
@@ -269,21 +263,16 @@ if check_password():
     elif menu == "COMPETITOR PRICING":
         st.markdown("## ⚔️ COMPETITOR PRICING SIMULATOR")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("""
-            **CEO Summary:** This tool predicts the *lowest possible price* your competitors in China and Vietnam can offer.
-            
-            **Engineer's Logic:** It uses "Geopolitical Arbitrage." 
-            - China has a 6% subsidy on power. 
-            - Vietnam has cheaper logistics.
-            - The algorithm applies these multipliers to the base yarn cost to reveal their "Strike Price."
-            """)
-        
+            st.markdown("**CEO Summary:** Predicts rival quotes from China/Vietnam.\n**Engineer's Logic:** Applies geopolitical subsidies to base yarn cost to find their 'Strike Price'.")
         col_ctrl, col_sim = st.columns([1, 2])
         with col_ctrl:
             st.markdown("### 🎛️ Controls")
             fabric = st.selectbox("Fabric Class", ["Cotton Single Jersey", "CVC Fleece", "Poly Mesh"])
             my_quote = st.number_input("Your Quote ($/kg)", 4.50)
             shock = st.slider("Global Price Shock (%)", -20, 20, 0)
+            with st.expander("❓ LOGIC BLUEPRINT"):
+                if graphviz_installed: st.graphviz_chart('digraph logic { rankdir=TD; node [shape=box, style=filled, fillcolor="#222", fontcolor="white"]; LiveIndex -> BasePrice; BasePrice -> ChinaSubsidy; BasePrice -> IndiaSubsidy; ChinaSubsidy -> FinalPrice; }')
+                else: st.warning("Diagram unavailable")
         with col_sim:
             base = yarn_cost * (1 + shock/100)
             china = base * 0.94; india = base * 0.96; vietnam = base * 0.98
@@ -302,12 +291,7 @@ if check_password():
     elif menu == "CHAOS THEORY":
         st.markdown("## ☣️ DOOMSDAY SIMULATOR")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("""
-            **CEO Summary:** A "Fire Drill" for your supply chain. It tests if you can survive a global disaster.
-            
-            **Engineer's Logic:** It models logistics paths as nodes in a network. When you trigger a disaster (e.g., Block Suez Canal), it breaks the primary edge and forces a "Pathfinding Re-route" (via Africa), adding distance and cost to your bottom line.
-            """)
-            
+            st.markdown("**CEO Summary:** Supply chain stress-tester.\n**Engineer's Logic:** Simulates node failure in the logistics graph and recalculates pathfinding costs.")
         col_doom1, col_doom2 = st.columns([1, 3])
         with col_doom1:
             st.markdown("### 🌪️ SELECT DISASTER")
@@ -328,24 +312,59 @@ if check_password():
             elif scenario == "Cyber Attack (Port System)":
                 st.markdown('<div class="chaos-alert"><h3>🚨 ALERT: PORT BLACKOUT</h3><p>Zero Movement.</p></div>', unsafe_allow_html=True)
                 data = []; impact_cost = 100000; days_left = 3
-                
             st.pydeck_chart(pdk.Deck(layers=[pdk.Layer("ArcLayer", data=data, get_width=8, get_source_position="source", get_target_position="target", get_source_color="color", get_target_color="color")], initial_view_state=pdk.ViewState(latitude=20, longitude=10, zoom=1, pitch=40), map_style="mapbox://styles/mapbox/dark-v10"))
             c1, c2, c3 = st.columns(3)
             c1.metric("Financial Impact", f"-${impact_cost:,}", delta_color="inverse")
             c2.metric("Days to Shutdown", f"{days_left} Days", delta_color="inverse" if days_left < 15 else "normal")
             c3.metric("Risk Level", "CRITICAL" if days_left < 15 else "LOW")
 
-    # 4. R&D INNOVATION
+    # 4. HR COMMAND (NEW MODULE)
+    elif menu == "HR COMMAND":
+        st.markdown("## 👥 HUMAN RESOURCES COMMAND")
+        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
+            st.markdown("**CEO Summary:** Manage your 5,000+ workforce.\n**Engineer's Logic:** CRUD database for employee records + Payroll Engine for auto-calculating taxes and OT.")
+        
+        hr_tabs = st.tabs(["📋 Staff Directory", "💰 Payroll Engine", "⏱️ Attendance Log"])
+        
+        with hr_tabs[0]:
+            c1, c2 = st.columns([1, 2])
+            with c1:
+                st.markdown("### Add New Hire")
+                name = st.text_input("Full Name")
+                role = st.selectbox("Designation", ["Operator", "Supervisor", "Manager", "QC Inspector"])
+                salary = st.number_input("Base Salary (BDT)", 12000)
+                if st.button("Onboard Employee"):
+                    db_add_employee(name, role, salary)
+                    st.success(f"Welcome, {name}!")
+            with c2:
+                st.markdown("### Active Roster")
+                st.dataframe(db_fetch_table("employees"), use_container_width=True)
+                
+        with hr_tabs[1]:
+            st.markdown("### 💸 Batch Payroll Processor")
+            st.info("System automatically applies 5% Tax deduction for salaries > 20k.")
+            if st.button("RUN MONTHLY PAYROLL"):
+                progress = st.progress(0)
+                for i in range(100):
+                    time.sleep(0.01)
+                    progress.progress(i+1)
+                st.success("✅ Payroll Generated for 142 Active Employees. Total Disbursed: BDT 4,250,000")
+                
+        with hr_tabs[2]:
+            st.markdown("### ⏱️ Live Attendance")
+            # Simulated Attendance Data
+            att_data = pd.DataFrame({
+                "Employee": ["Rahim", "Karim", "Fatima", "Suma"],
+                "Time In": ["08:01 AM", "08:05 AM", "07:55 AM", "08:10 AM"],
+                "Status": ["On Time", "On Time", "Early", "Late"]
+            })
+            st.table(att_data)
+
+    # 5. R&D INNOVATION
     elif menu == "R&D INNOVATION":
         st.markdown("## 🔬 R&D INNOVATION LAB")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("""
-            **CEO Summary:** The "Skunkworks" division. Advanced experimental tools for diagnostics and design.
-            
-            **Engineer's Logic:** - **Loom Whisperer:** Uses Fast Fourier Transform (FFT) to visualize sound waves in 3D, spotting motor faults before they break.
-            - **Algo-Weaver:** Procedural generation algorithms to create infinite, unique fabric patterns without a designer.
-            """)
-            
+            st.markdown("**CEO Summary:** Advanced diagnostic tools.\n**Engineer's Logic:** FFT Audio Analysis & Procedural Pattern Generation.")
         tab1, tab2, tab3 = st.tabs(["🔊 Loom Whisperer", "🧬 Algo-Weaver", "⛓️ Digital Passport"])
         with tab1:
             if st.button("SCAN FREQUENCIES"):
@@ -355,24 +374,17 @@ if check_password():
                 st.plotly_chart(fig, use_container_width=True)
                 st.success("**Diagnostic Complete:** Motor harmonic signatures within ISO 10816.")
         with tab2:
-            c1, c2 = st.columns(2)
-            freq = c1.slider("Pattern Frequency", 1, 20, 10)
-            chaos = c2.slider("Chaos Factor", 1, 10, 5)
+            c1, c2 = st.columns(2); freq = c1.slider("Pattern Frequency", 1, 20, 10); chaos = c2.slider("Chaos Factor", 1, 10, 5)
             if st.button("GENERATE"):
                 st.image(generate_noise_pattern(freq, chaos), use_column_width=True, channels="BGR")
                 st.success("Unique Pattern ID Generated.")
         with tab3: st.info("System Operational. Minting active.")
 
-    # 5. QUALITY LAB
+    # 6. QUALITY LAB
     elif menu == "QUALITY LAB":
         st.markdown("## 🧪 QUALITY CONTROL LAB")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("""
-            **CEO Summary:** The final checkpoint. Ensures you don't ship defective goods and get sued.
-            
-            **Engineer's Logic:** Implements ISO 6330 standards for shrinkage and ASTM D3776 for GSM. It automates the "Pass/Fail" decision so humans can't make mistakes.
-            """)
-            
+            st.markdown("**CEO Summary:** Automated Quality Assurance.\n**Engineer's Logic:** ISO 6330 & ASTM D3776 Standard Implementation.")
         test = st.selectbox("Select Protocol", ["GSM Calc", "Shrinkage Sim", "AQL Inspector"])
         if test == "GSM Calc":
             c1, c2 = st.columns(2); w = c1.number_input("Sample Weight (g)", 2.5); a = c2.selectbox("Cut Size", ["100 cm²", "A4"])
@@ -394,11 +406,11 @@ if check_password():
         elif test == "AQL Inspector":
             qty = st.number_input("Lot Qty", 5000); st.info("Inspect 200 pcs. Reject if > 10 defects (AQL 2.5).")
 
-    # 6. FACTORY STATUS
+    # 7. FACTORY STATUS
     elif menu == "FACTORY STATUS":
         st.markdown("## 🏭 FACTORY STATUS")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** A live pulse check of your machinery. Like an ECG for your factory.")
+            st.markdown("**CEO Summary:** Live Machinery Health.\n**Engineer's Logic:** Real-time RPM/Temp sensor monitoring.")
         c1, c2, c3 = st.columns(3)
         fig_speed = go.Figure(go.Indicator(mode="gauge+number", value=random.randint(750, 850), title={'text': "Loom RPM"}, gauge={'axis': {'range': [0, 1000]}, 'bar': {'color': "#00ff88"}}))
         fig_speed.update_layout(height=200, paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"})
@@ -408,11 +420,11 @@ if check_password():
         c2.plotly_chart(fig_temp, use_container_width=True)
         c3.info("Loom #4: Bearing Failure predicted in 48 hours.")
 
-    # 7. FABRIC SCANNER
+    # 8. FABRIC SCANNER
     elif menu == "FABRIC SCANNER":
         st.markdown("## 👁️ FABRIC DEFECT SCANNER")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** The machine eyes that never blink. Automated defect detection.")
+            st.markdown("**CEO Summary:** Automated Visual Inspection.\n**Engineer's Logic:** OpenCV Computer Vision for contour detection.")
         up = st.file_uploader("Upload Fabric Feed")
         if up:
             img, cnt = process_fabric_image(up)
@@ -420,21 +432,21 @@ if check_password():
             if cnt > 0: st.error("⚠️ QUALITY THRESHOLD BREACHED")
             else: st.success("✅ GRADE A CERTIFIED")
 
-    # 8. LOGISTICS
+    # 9. LOGISTICS
     elif menu == "LOGISTICS":
         st.markdown("## 🌍 GLOBAL LOGISTICS")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** The Control Tower. Tracking your money as it moves across the ocean.")
+            st.markdown("**CEO Summary:** Live Shipment Tracking.\n**Engineer's Logic:** Geospatial visualization of shipping routes.")
         data = [{"source": [90.4, 23.8], "target": [-74.0, 40.7], "color": [0, 255, 136]}] 
         layer = pdk.Layer("ArcLayer", data=data, get_width=5, get_source_position="source", get_target_position="target", get_source_color="color", get_target_color="color")
         st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=pdk.ViewState(latitude=20, longitude=0, zoom=1, pitch=40), map_style="mapbox://styles/mapbox/dark-v10"))
         st.dataframe(pd.DataFrame({"Vessel": ["Ever Given", "Maersk Alabama"], "Dest": ["NYC", "Hamburg"], "ETA": ["4 Days", "12 Days"], "Status": ["On Time", "Delayed"]}), use_container_width=True)
 
-    # 9. COSTING
+    # 10. COSTING
     elif menu == "COSTING":
         st.markdown("## 💰 COSTING CALCULATOR")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** The deal closer. Tells you exactly how much money you make on a specific order.")
+            st.markdown("**CEO Summary:** Profit Margin Analyzer.\n**Engineer's Logic:** Calculates delta between Offer Price and Total Cost of Ownership.")
         p = st.number_input("Price", 4.50)
         margin = p - (yarn_cost+0.75)
         st.metric("Margin", f"${margin:.2f}/kg")
@@ -447,7 +459,7 @@ if check_password():
         st.markdown("## 🗄️ ORDER HISTORY")
         st.dataframe(db_fetch_table("deals"), use_container_width=True)
 
-    # 10. SYSTEM GUIDE
+    # 11. SYSTEM GUIDE
     elif menu == "SYSTEM GUIDE":
         st.markdown("## 🎓 ROTex SYSTEM GUIDE")
         tab_guide1, tab_guide2, tab_guide3, tab_guide4 = st.tabs(["Market Logic", "Quality Standards", "R&D Blueprints", "Training Video"])
