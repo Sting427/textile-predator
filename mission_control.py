@@ -100,7 +100,6 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS scans (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, defects INTEGER, status TEXT)''')
     # NEW HR TABLES
     c.execute('''CREATE TABLE IF NOT EXISTS employees (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT, salary REAL, status TEXT)''')
-    c.execute('''CREATE TABLE IF NOT EXISTS payroll (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, emp_id INTEGER, gross REAL, tax REAL, net REAL)''')
     conn.commit(); conn.close()
 
 def db_log_deal(buyer, qty, price, cost, margin):
@@ -226,7 +225,7 @@ if check_password():
     if menu == "MARKET INTELLIGENCE":
         st.markdown("## 📡 MARKET INTELLIGENCE")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Wall Street for Textiles. Live raw material tracking.\n**Engineer's Logic:** Scrapes NYMEX/Henry Hub APIs to compute real-time Yarn Fair Value.")
+            st.markdown("**CEO Summary:** Wall Street for Textiles.\n**Engineer's Logic:** Live data scraping from NYMEX/Henry Hub.")
         
         st.markdown(f"<div style='background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; white-space:nowrap; overflow:hidden; color:#00ff88; font-family:monospace;'>LIVE FEED: COTTON: ${df['Cotton_USD'].iloc[-1]:.2f} ▲ | GAS: ${df['Gas_USD'].iloc[-1]:.2f} ▼ | YARN FAIR VALUE: ${yarn_cost:.2f} ▲</div>", unsafe_allow_html=True)
         st.write("")
@@ -263,7 +262,7 @@ if check_password():
     elif menu == "COMPETITOR PRICING":
         st.markdown("## ⚔️ COMPETITOR PRICING SIMULATOR")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Predicts rival quotes from China/Vietnam.\n**Engineer's Logic:** Applies geopolitical subsidies to base yarn cost to find their 'Strike Price'.")
+            st.markdown("**CEO Summary:** Predicts rival quotes from China/Vietnam.\n**Engineer's Logic:** Applies geopolitical subsidies to base yarn cost.")
         col_ctrl, col_sim = st.columns([1, 2])
         with col_ctrl:
             st.markdown("### 🎛️ Controls")
@@ -291,7 +290,7 @@ if check_password():
     elif menu == "CHAOS THEORY":
         st.markdown("## ☣️ DOOMSDAY SIMULATOR")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Supply chain stress-tester.\n**Engineer's Logic:** Simulates node failure in the logistics graph and recalculates pathfinding costs.")
+            st.markdown("**CEO Summary:** Supply chain stress-tester.\n**Engineer's Logic:** Simulates node failure in the logistics graph.")
         col_doom1, col_doom2 = st.columns([1, 3])
         with col_doom1:
             st.markdown("### 🌪️ SELECT DISASTER")
@@ -322,42 +321,30 @@ if check_password():
     elif menu == "HR COMMAND":
         st.markdown("## 👥 HUMAN RESOURCES COMMAND")
         with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Manage your 5,000+ workforce.\n**Engineer's Logic:** CRUD database for employee records + Payroll Engine for auto-calculating taxes and OT.")
+            st.markdown("**CEO Summary:** Manage your 5,000+ workforce.\n**Engineer's Logic:** CRUD database for employee records + Payroll Engine.")
         
         hr_tabs = st.tabs(["📋 Staff Directory", "💰 Payroll Engine", "⏱️ Attendance Log"])
-        
         with hr_tabs[0]:
             c1, c2 = st.columns([1, 2])
             with c1:
                 st.markdown("### Add New Hire")
-                name = st.text_input("Full Name")
-                role = st.selectbox("Designation", ["Operator", "Supervisor", "Manager", "QC Inspector"])
-                salary = st.number_input("Base Salary (BDT)", 12000)
+                name = st.text_input("Full Name"); role = st.selectbox("Designation", ["Operator", "Supervisor", "Manager", "QC Inspector"]); salary = st.number_input("Base Salary (BDT)", 12000)
                 if st.button("Onboard Employee"):
                     db_add_employee(name, role, salary)
                     st.success(f"Welcome, {name}!")
             with c2:
                 st.markdown("### Active Roster")
                 st.dataframe(db_fetch_table("employees"), use_container_width=True)
-                
         with hr_tabs[1]:
             st.markdown("### 💸 Batch Payroll Processor")
             st.info("System automatically applies 5% Tax deduction for salaries > 20k.")
             if st.button("RUN MONTHLY PAYROLL"):
                 progress = st.progress(0)
-                for i in range(100):
-                    time.sleep(0.01)
-                    progress.progress(i+1)
+                for i in range(100): time.sleep(0.01); progress.progress(i+1)
                 st.success("✅ Payroll Generated for 142 Active Employees. Total Disbursed: BDT 4,250,000")
-                
         with hr_tabs[2]:
             st.markdown("### ⏱️ Live Attendance")
-            # Simulated Attendance Data
-            att_data = pd.DataFrame({
-                "Employee": ["Rahim", "Karim", "Fatima", "Suma"],
-                "Time In": ["08:01 AM", "08:05 AM", "07:55 AM", "08:10 AM"],
-                "Status": ["On Time", "On Time", "Early", "Late"]
-            })
+            att_data = pd.DataFrame({"Employee": ["Rahim", "Karim", "Fatima", "Suma"], "Time In": ["08:01 AM", "08:05 AM", "07:55 AM", "08:10 AM"], "Status": ["On Time", "On Time", "Early", "Late"]})
             st.table(att_data)
 
     # 5. R&D INNOVATION
